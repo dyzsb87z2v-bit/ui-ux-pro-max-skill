@@ -25,8 +25,7 @@
  */
 import { Picture } from 'astro:assets';
 import far from '../assets/scene/window-triptych.png';   // L1+L2 Berlin + glass
-import mid from '../assets/scene/contact-texture.png';    // L3 rug (primary)
-import near from '../assets/scene/workshop-weaver.png';   // L4 weaver (secondary)
+import AtelierScene from './AtelierScene.astro';
 import Wordmark from './primitives/Wordmark.astro';
 import Divider from './primitives/Divider.astro';
 import GhostButton from './primitives/GhostButton.astro';
@@ -36,21 +35,18 @@ import { brand } from '../data/site';
 <section class="hero panel scene-locked" aria-labelledby="hero-title" data-hero>
   <!-- Depth stack. data-depth drives Phase 6 parallax; the values are the
        measured layer order, near = 1. -->
-  <div class="layers" aria-hidden="true">
+  <div class="layers" aria-hidden="true" data-depth-stage>
     <div class="layer layer-far" data-depth="1" data-placeholder-asset="hero-plate">
       <Picture src={far} alt="" widths={[480, 960]} sizes="100vw"
                formats={['avif']} fallbackFormat="webp" quality={60}
                loading="eager" fetchpriority="high" />
     </div>
-    <div class="layer layer-mid" data-depth="3">
-      <Picture src={mid} alt="" widths={[360, 720]} sizes="42vw"
-               formats={['avif']} fallbackFormat="webp" quality={62} loading="lazy" />
-    </div>
-    <div class="layer layer-near" data-depth="4">
-      <Picture src={near} alt="" widths={[720]} sizes="46vw"
-               formats={['avif']} fallbackFormat="webp" quality={62} loading="lazy" />
-    </div>
   </div>
+
+  <!-- The craft zone (measured x 64–100%) is the 3D atelier: rug primary,
+       weaver present as the maker. It occupies a dedicated area of the
+       composition rather than taking over the page. -->
+  <AtelierScene variant="hero" class="hero-atelier" />
 
   <div class="content scene-text">
     <h1 id="hero-title" class="title"><Wordmark as="span" role="display" /></h1>
@@ -77,7 +73,8 @@ import { brand } from '../data/site';
   }
 
   .layers { position: absolute; inset: 0; z-index: 0; }
-  .layer { position: absolute; will-change: transform; }
+  .layer { position: absolute; will-change: transform; --dx: 0px; --dy: 0px;
+    transform: translate3d(var(--dx), var(--dy), 0); }
 
   /* L1+L2 — the window. Measured: it occupies x 6–34%, y 7–65% of the frame,
      NOT the full bleed. It is the key light, not the ground. Making it
@@ -96,29 +93,7 @@ import { brand } from '../data/site';
   }
   .layer-far :global(img) { inline-size: 100%; block-size: 100%; object-fit: cover; }
 
-  /* L3 — the rug, primary product, right third (measured 69–91% x). */
-  .layer-mid {
-    /* Measured wall-rug band: x 69–91%, y 2–53% of the hero. */
-    inset-block: 6% 30%;
-    inset-inline-end: 9%;
-    inline-size: 22%;
-    border: var(--border) solid var(--hairline);
-  }
-  .layer-mid :global(img) { inline-size: 100%; block-size: 100%; object-fit: cover; }
 
-  /* L4 — the weaver, SECONDARY. Lower right, below and beside the rug,
-     never centred, never the subject. Masked into the scene so she reads as
-     environment rather than as a cut-out. */
-  .layer-near {
-    inset-block-end: 0;
-    inset-inline-end: 0;
-    inline-size: 42%;
-    mask-image: linear-gradient(to top, #000 40%, transparent 100%),
-                linear-gradient(to left, #000 62%, transparent 100%);
-    mask-composite: intersect;
-    -webkit-mask-composite: source-in;
-  }
-  .layer-near :global(img) { inline-size: 100%; block-size: auto; }
 
   .content {
     /* absolute + inset so it centres against the section's real box.
@@ -153,11 +128,19 @@ import { brand } from '../data/site';
   }
   .cities .sep { color: var(--gold); font-size: 0.62em; letter-spacing: 0; }
 
+  /* Craft zone — measured x 64–100% of the hero. */
+  .hero :global(.hero-atelier) {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    inline-size: 38%;
+    z-index: 0;
+  }
+
   @media (max-width: 900px) {
     .content { padding-inline-end: var(--space-class); }
     .layer-far { inline-size: 58%; }
-    .layer-mid { inline-size: 30%; inset-block: 5% 34%; inset-inline-end: 5%; }
-    .layer-near { inline-size: 62%; opacity: 0.85; }
+    .hero :global(.hero-atelier) { inline-size: 46%; }
   }
 
   @media (max-width: 640px) {
@@ -173,8 +156,9 @@ import { brand } from '../data/site';
     /* Stacked, not overlaid: window occupies the upper band, the type block
        the middle, and the craft zone the lower third. The rug previously ran
        under the cities line and the CTA. */
-    .layer-far { inline-size: 100%; inset-block: 0 42%; }
-    .layer-mid { inset-inline-end: 6%; inline-size: 30%; inset-block: 62% 10%; }
-    .layer-near { inline-size: 74%; opacity: 0.72; }
+    .layer-far { inline-size: 100%; inset-block: 0 52%; }
+    .hero :global(.hero-atelier) {
+      inline-size: 100%; inset-block: 54% 0; inset-inline-end: 0;
+    }
   }
 </style>

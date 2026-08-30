@@ -130,3 +130,57 @@ plateau), so the handoff lands on a shot that has come to rest.
 **Retire with:** a text-free intro clip. Then the gate can hold the chrome
 and cross-fade only the scene layer, and the two heroes become one
 continuous move.
+
+---
+
+## 3D cinematic — what is real and what is temporary
+
+### The intro is no longer the reference video
+
+The higher-quality `.mov` (HEVC, 1110×662, 7.8 Mbps) was decoded and the
+**text-free region containing the weaver and her rug extracted**: crop
+`x 845–1110, y 55–662`. Everything baked into the reference — wordmark,
+tagline, sub-line, CTA, unrelated chrome — lies outside that crop and never
+ships.
+
+That clip is staged as ONE plane inside a layered perspective composition
+(`AtelierScene.astro`), not played as a background. Result:
+
+| | before | after |
+|---|---|---|
+| shipped video | 2,418 KB, baked text | **350 KB** desktop / **163 KB** mobile, text-free |
+| role | full-frame background | one plane in a 4-layer 3D scene |
+
+The old `public/media/intro.mp4` was deleted — it is no longer referenced.
+
+### Why CSS 3D and not WebGL
+
+There is no 3D geometry and no model to render. The scene is layered planes
+with real `perspective`, `translateZ` and `rotateX`, which the compositor
+draws on the GPU for free. A WebGL runtime would add ~600 KB to draw the
+same planes. **When real rug models exist, they mount in the product viewer —
+this scene does not change.** No Three.js and no Framer Motion are installed.
+
+### Temporary in the 3D scene
+
+- **`plane-wall`** uses `scene/contact-texture.png` (the rug medallion crop).
+  It stands in for the atelier's back wall. Text-free and correct in palette,
+  but it is a rug detail, not a wall.
+- **`plane-floor`** uses `atelier/floor-rug.png`, extracted from the same
+  `.mov` (`x 90–1000, y 430–662`). Genuine and text-free, but only 910 px wide.
+- The weaving clip is **264×606** — its native text-free extent. It cannot be
+  enlarged without a re-render at higher resolution.
+
+### Collection card art — baked titles cropped out
+
+The delivered card crops (`09`–`13`) are crops of the **rendered** cards and
+carry their own titles and "Discover" links in the pixels. Measured: the baked
+title sits at y 69–76% and the link at y 82–86%.
+
+Card art is therefore cropped to the **top 63%**, which is texture only. The
+titles on the site are live text. Without this the cards render every label
+twice.
+
+**Retire with:** product photography that is texture-only from the start,
+following the measured rule — texture crop for rugs, full pictorial scene for
+tapestries.

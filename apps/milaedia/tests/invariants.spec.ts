@@ -23,7 +23,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 // Every page the build serves is guarded, not just the landing page.
-const PAGES = ['/', '/home'];
+const PAGES = ['/', '/home', '/collections'];
 
 /* ---------- helpers ---------- */
 
@@ -233,6 +233,69 @@ test.describe('invariant 6 — temperature encodes state', () => {
     });
     expect(result.offSystem, 'interactive colours must sit on the gold or silver ramp').toEqual([]);
     expect(result.currentNotGold, 'aria-current elements must be gold — temperature is the state signal').toEqual([]);
-    expect(result.ctaGold, 'primary CTA must be on the gold ramp').toBe(true);
+    // Not every page has a primary CTA — the collections index is driven by
+    // the cards themselves. The assertion is conditional: IF one exists, it
+    // must be gold.
+    expect(result.ctaGold ?? true, 'primary CTA must be on the gold ramp').toBe(true);
+  });
+});
+
+/* ---------- 7. the type never loses its shadow pocket ----------
+   The measured hero places its type at ~18% of peak luminance, with no
+   scrim. Parallax can drag a bright layer under it — the single most
+   predictable failure in the build (spec §11). This measures the region
+   BEHIND the type block, at rest and after the depth engine has been pushed
+   to its clamp in every direction. */
+test.describe('invariant 7 — the type keeps its shadow pocket', () => {
+  for (const path of ['/home', '/'])
+  test(`${path}: luminance behind the display type stays low under parallax`, async ({ page }) => {
+    await page.goto(path);
+    await page.waitForLoadState('networkidle');
+
+    const box = await page.locator('[data-type="display"]').first().boundingBox();
+    expect(box, 'no display type found').not.toBeNull();
+
+    const sample = async () => {
+      const shot = await page.screenshot({
+        clip: { x: box!.x, y: box!.y, width: box!.width, height: box!.height },
+        type: 'png',
+      });
+      return page.evaluate(async (b64) => {
+        const img = new Image();
+        img.src = 'data:image/png;base64,' + b64;
+        await img.decode();
+        const c = document.createElement('canvas');
+        c.width = 200;
+        c.height = Math.max(1, Math.round((img.naturalHeight / img.naturalWidth) * 200));
+        const ctx = c.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        const d = ctx.getImageData(0, 0, c.width, c.height).data;
+        // The glyphs themselves are bright by design. Measure the GROUND:
+        // the darker half of the region is the backing the type sits on.
+        const lums: number[] = [];
+        for (let i = 0; i < d.length; i += 4) {
+          lums.push(0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]);
+        }
+        lums.sort((a, b) => a - b);
+        return lums[Math.floor(lums.length * 0.5)]; // median = the backing
+      }, shot.toString('base64'));
+    };
+
+    const readings: number[] = [await sample()];
+
+    // Push the depth engine to its clamp from four directions and re-measure.
+    const vp = page.viewportSize()!;
+    for (const [x, y] of [[10, 10], [vp.width - 10, 10], [10, vp.height - 10], [vp.width - 10, vp.height - 10]]) {
+      await page.mouse.move(x, y);
+      await page.waitForTimeout(700);
+      readings.push(await sample());
+    }
+
+    const worst = Math.max(...readings);
+    // Measured backing under the reference hero type: L 16–29 of 255.
+    // 70 leaves generous headroom for the interim plate while still failing
+    // if a bright layer drifts under the wordmark.
+    expect(worst, `worst backing luminance ${worst.toFixed(1)} across ${readings.length} camera positions`)
+      .toBeLessThanOrEqual(70);
   });
 });

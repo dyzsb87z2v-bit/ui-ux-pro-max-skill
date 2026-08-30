@@ -166,7 +166,17 @@ import { brand } from '../data/site';
     }
     .title :global(.wordmark) { font-size: clamp(2.6rem, 15vw, 5rem); }
     .cities { gap: 0.55em; letter-spacing: 0.16em; }
-    /* Weaver and wall rug live in the right third; hold them in frame. */
-    .scene :global(img) { object-position: 62% 50%; }
+    /* Invariant 7 measured the type's backing at 81 on a 70 ceiling here:
+       on a portrait viewport a full-bleed window puts the brightest part of
+       the scene directly under the wordmark. Same error as the hero, same
+       fix — the window is the KEY LIGHT occupying a band, not the ground.
+       Confining it to the upper band returns the type to the page ground,
+       which is what the reference's dark regions effectively are. */
+    .scene {
+      inset-block-end: auto;
+      block-size: 46%;
+      mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+    }
+    .scene :global(img) { object-position: 60% 42%; }
   }
 </style>

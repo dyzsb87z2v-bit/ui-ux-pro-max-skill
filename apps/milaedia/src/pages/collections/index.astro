@@ -1,0 +1,120 @@
+---
+/**
+ * Collections index.
+ *
+ * Driven by the five EVIDENCED, hand-authored collections in explicit order.
+ * `material` and `tier` ride along as attributes so a filter becomes possible
+ * later, but they do NOT drive this page: the measured matrix has 9 cells and
+ * only 5 are evidenced, so a two-axis filter would render four dead routes
+ * (Spec §12). The four MISSING cells are surfaced below rather than hidden.
+ */
+import Base from '../../layouts/Base.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import CollectionCard from '../../components/CollectionCard.astro';
+import Divider from '../../components/primitives/Divider.astro';
+import { collections, collectionsMissing, brand } from '../../data/site';
+
+import antiqueRugs from '../../assets/collections/antique-rugs.png';
+import handwovenSilkRugs from '../../assets/collections/handwoven-silk-rugs.png';
+import luxuryRugs from '../../assets/collections/luxury-rugs.png';
+import antiqueSilkTapestries from '../../assets/collections/antique-silk-tapestries.png';
+import luxurySilkTapestries from '../../assets/collections/luxury-silk-tapestries.png';
+
+const images = {
+  'antique-rugs': antiqueRugs,
+  'handwoven-silk-rugs': handwovenSilkRugs,
+  'luxury-rugs': luxuryRugs,
+  'antique-silk-tapestries': antiqueSilkTapestries,
+  'luxury-silk-tapestries': luxurySilkTapestries,
+};
+---
+<Base title={`Collections — ${brand.wordmark}`}
+      description="Antique, handwoven and luxury Persian rugs and silk tapestries, sourced and presented by MiLAEDiA.">
+  <div class="shell">
+    <SiteHeader current="/collections" />
+    <main id="main" class="frame">
+      <header class="head">
+        <h1 class="title" data-type="display">Collections</h1>
+        <p class="lede" data-type="tagline" data-uppercase>{brand.tagline}</p>
+        <Divider class="head-divider" />
+      </header>
+
+      <ul class="grid" role="list">
+        {collections.map((c, i) => (
+          <li><CollectionCard collection={c} images={images} eager={i < 3} /></li>
+        ))}
+      </ul>
+
+      <p class="note">
+        {collectionsMissing.length} further combinations of material and tier exist in the
+        catalogue vocabulary but have no collection and no imagery yet.
+      </p>
+    </main>
+  </div>
+</Base>
+
+<style>
+  .shell { position: relative; }
+
+  .head {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: 1em;
+    padding-block: clamp(90px, 15vh, 190px) clamp(28px, 5vh, 60px);
+  }
+  .title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 300;
+    /* Display tier. The system has one very large size and several very
+       small ones, with nothing between — that gap is what carries the
+       register, and a page title is not an exception to it. */
+    font-size: clamp(3rem, 12vw, 7rem);
+    line-height: 1;
+    letter-spacing: var(--track-display);
+    background: var(--wordmark-grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .lede {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--type-tagline);
+    letter-spacing: var(--track-tagline);
+    text-transform: uppercase;
+    color: var(--silver-hi);
+  }
+  .head :global(.head-divider) { inline-size: min(360px, 64%); margin-block-start: 0.6em; }
+
+  /* Five cards. Measured gutter: 7–8px @1143 = 0.66% — the tightest in the
+     system, because these are items INSIDE one group. */
+  .grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-intra);
+  }
+  .grid > li { display: block; }
+
+  .note {
+    margin: clamp(32px, 6vh, 72px) auto 0;
+    max-inline-size: 46ch;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: var(--type-card-link);
+    letter-spacing: 0.04em;
+    color: var(--silver);
+    opacity: 0.6;
+  }
+
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: repeat(3, 1fr); gap: var(--space-adjacent); }
+  }
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-adjacent); }
+  }
+</style>

@@ -5,26 +5,25 @@
  * ARCHITECTURE (spec §11):
  *   - Gated, never blocking. The page beneath renders first and completely;
  *     the overlay sits on top and dissolves away to reveal it. Nothing waits
- *     on the video, and no content exists only inside it.
+ *     on the scene, and no content exists only inside it.
  *   - Session-persisted. Seen once, then skipped. Crawlers and returning
  *     visitors land straight on the content.
  *   - Always skippable — a visible control from frame 1, plus Escape.
  *   - prefers-reduced-motion bypasses ENTIRELY. Not a shortened intro: no
  *     intro.
- *   - Data-saver and narrow viewports bypass. 2.4 MB must never land on a
- *     metered connection before interaction.
+ *   - Data-saver and narrow viewports bypass. Nothing heavy may land on a
+ *     metered connection before interaction; the scene falls back to its
+ *     poster, and below 640px the gate does not run at all.
  *   - No-JS never sees it: the overlay ships `hidden` and only an inline
  *     head script may reveal it, synchronously, so there is no flash.
  *
- * HANDOFF — technique 1, dissolve through black.
- *   The spec preferred technique 2 (hold the chrome, cross-fade only the
- *   scene), because the video demonstrates that architecture: its header and
- *   hero type stay pinned across all 20 sampled frames while the environment
- *   moves. But technique 2 needs a TEXT-FREE video, and every frame of this
- *   one carries baked-in type — the same defect as the hero plate. Holding
- *   our live chrome over it would ghost against the video's own baked
- *   wordmark. So the video plays full-frame as the rendered page it is, and
- *   dissolves through black into the real one. Recorded in PLACEHOLDERS.md.
+ * HANDOFF — technique 2, as the spec preferred.
+ *   Now possible. The higher-quality .mov was decoded and the text-free
+ *   region containing the weaver and her rug extracted, so the intro no
+ *   longer carries baked type and our live chrome can be held over it
+ *   without ghosting. The threshold stages the SAME AtelierScene the hero
+ *   uses; on entry the scene stays and only the surrounding frame resolves,
+ *   so the two heroes are one continuous move rather than two shots.
  *
  * MOTION ENVELOPE, measured from the encoded per-frame sizes — the one
  * rigid measurement in a non-rigid clip:
@@ -32,20 +31,16 @@
  * The final half-second is the quietest in the clip at 40% of plateau, so
  * the dissolve begins there and lands on a shot that has come to rest.
  */
+import AtelierScene from './AtelierScene.astro';
+
 const SETTLE_AT = 9.4;   // seconds — where the measured envelope settles
 const DISSOLVE  = 900;   // ms
 ---
 <div class="intro" id="intro-gate" hidden data-intro>
-  <video
-    class="intro-video"
-    data-intro-video
-    playsinline
-    preload="none"
-    poster="/media/intro-poster.jpg"
-    aria-label="MiLAEDiA cinematic introduction"
-  >
-    <source src="/media/intro.mp4" type="video/mp4" />
-  </video>
+  <div class="intro-stage">
+    <AtelierScene variant="intro" class="intro-atelier" />
+    <p class="intro-line" data-uppercase aria-hidden="true">The Atelier</p>
+  </div>
 
   <button class="skip" type="button" data-intro-skip data-uppercase>Skip</button>
 </div>
@@ -64,10 +59,30 @@ const DISSOLVE  = 900;   // ms
   .intro[hidden] { display: none; }
   .intro[data-dissolving] { opacity: 0; pointer-events: none; }
 
-  .intro-video {
-    inline-size: 100%;
-    block-size: 100%;
-    object-fit: cover;
+  .intro-stage {
+    position: relative;
+    inline-size: min(1100px, 92vw);
+    block-size: min(78vh, 620px);
+    display: grid;
+    place-items: center;
+  }
+  .intro-stage :global(.intro-atelier) { position: absolute; inset: 0; }
+
+  .intro-line {
+    position: absolute;
+    inset-block-end: -2.4em;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--type-tagline);
+    letter-spacing: var(--track-cities);
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0;
+    animation: line-in 1400ms var(--ease-cinematic) 1200ms both;
+  }
+  @keyframes line-in { to { opacity: 0.85; } }
+  @media (prefers-reduced-motion: reduce) {
+    .intro-line { animation: none; opacity: 0.85; }
   }
 
   .skip {
@@ -112,7 +127,6 @@ const DISSOLVE  = 900;   // ms
     gate.hidden = false;
     document.documentElement.style.overflow = 'hidden';
 
-    const video = gate.querySelector('[data-intro-video]');
     const skip = gate.querySelector('[data-intro-skip]');
     let done = false;
 
@@ -125,7 +139,6 @@ const DISSOLVE  = 900;   // ms
         gate.hidden = true;
         gate.removeAttribute('data-dissolving');
         document.documentElement.style.overflow = '';
-        try { video.pause(); video.removeAttribute('src'); video.load(); } catch { /* ignore */ }
         const h1 = document.querySelector('h1');
         if (h1) { h1.setAttribute('tabindex', '-1'); h1.focus({ preventScroll: true }); }
       }, DISSOLVE);
@@ -134,28 +147,10 @@ const DISSOLVE  = 900;   // ms
     skip?.addEventListener('click', finish);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') finish(); });
 
-    // Begin the dissolve where the measured envelope settles, so the handoff
-    // lands on a shot that has come to rest rather than mid-move.
-    video.addEventListener('timeupdate', () => {
-      if (video.currentTime >= SETTLE_AT) finish();
-    });
-    video.addEventListener('ended', finish);
-    video.addEventListener('error', finish);   // never trap the visitor
+    // Dissolve where the measured envelope settles (final half-second is the
+    // quietest in the reference clip, at 40% of plateau), so the handoff
+    // lands on a composition that has come to rest.
+    window.setTimeout(finish, SETTLE_AT * 1000);
 
-    // Load only now — preload="none" kept it off the critical path.
-    video.load();
-    const p = video.play();
-    if (p && typeof p.catch === 'function') {
-      // Autoplay with sound is refused without a gesture. The entry click on
-      // the cover IS a gesture, but a direct navigation to /home is not, so
-      // fall back to muted rather than failing to the black screen.
-      p.catch(() => {
-        video.muted = true;
-        video.play().catch(finish);
-      });
-    }
-
-    // Safety net: never hold the screen longer than the clip.
-    window.setTimeout(finish, (SETTLE_AT + 2) * 1000);
   })();
 </script>
