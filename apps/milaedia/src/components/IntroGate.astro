@@ -1,0 +1,161 @@
+---
+/**
+ * IntroGate — the cinematic threshold.
+ *
+ * ARCHITECTURE (spec §11):
+ *   - Gated, never blocking. The page beneath renders first and completely;
+ *     the overlay sits on top and dissolves away to reveal it. Nothing waits
+ *     on the video, and no content exists only inside it.
+ *   - Session-persisted. Seen once, then skipped. Crawlers and returning
+ *     visitors land straight on the content.
+ *   - Always skippable — a visible control from frame 1, plus Escape.
+ *   - prefers-reduced-motion bypasses ENTIRELY. Not a shortened intro: no
+ *     intro.
+ *   - Data-saver and narrow viewports bypass. 2.4 MB must never land on a
+ *     metered connection before interaction.
+ *   - No-JS never sees it: the overlay ships `hidden` and only an inline
+ *     head script may reveal it, synchronously, so there is no flash.
+ *
+ * HANDOFF — technique 1, dissolve through black.
+ *   The spec preferred technique 2 (hold the chrome, cross-fade only the
+ *   scene), because the video demonstrates that architecture: its header and
+ *   hero type stay pinned across all 20 sampled frames while the environment
+ *   moves. But technique 2 needs a TEXT-FREE video, and every frame of this
+ *   one carries baked-in type — the same defect as the hero plate. Holding
+ *   our live chrome over it would ghost against the video's own baked
+ *   wordmark. So the video plays full-frame as the rendered page it is, and
+ *   dissolves through black into the real one. Recorded in PLACEHOLDERS.md.
+ *
+ * MOTION ENVELOPE, measured from the encoded per-frame sizes — the one
+ * rigid measurement in a non-rigid clip:
+ *   hold 0.5s -> ease-in 1.5s -> plateau 4.5s -> ease-out 2s -> settle
+ * The final half-second is the quietest in the clip at 40% of plateau, so
+ * the dissolve begins there and lands on a shot that has come to rest.
+ */
+const SETTLE_AT = 9.4;   // seconds — where the measured envelope settles
+const DISSOLVE  = 900;   // ms
+---
+<div class="intro" id="intro-gate" hidden data-intro>
+  <video
+    class="intro-video"
+    data-intro-video
+    playsinline
+    preload="none"
+    poster="/media/intro-poster.jpg"
+    aria-label="MiLAEDiA cinematic introduction"
+  >
+    <source src="/media/intro.mp4" type="video/mp4" />
+  </video>
+
+  <button class="skip" type="button" data-intro-skip data-uppercase>Skip</button>
+</div>
+
+<style>
+  .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: var(--ground);
+    display: grid;
+    place-items: center;
+    opacity: 1;
+    transition: opacity 900ms var(--ease-cinematic);
+  }
+  .intro[hidden] { display: none; }
+  .intro[data-dissolving] { opacity: 0; pointer-events: none; }
+
+  .intro-video {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  .skip {
+    position: absolute;
+    inset-block-end: clamp(20px, 5vh, 52px);
+    inset-inline-end: clamp(16px, 4vw, 52px);
+    padding: 0.8em 1.6em;
+    border: var(--border) solid var(--gold);
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--gold-hi);
+    font-family: var(--font-display);
+    font-size: var(--type-nav-idle);
+    letter-spacing: var(--track-cta);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 240ms var(--ease-cinematic), border-color 240ms var(--ease-cinematic);
+  }
+  .skip:hover, .skip:focus-visible { color: #F3DEBB; border-color: #F3DEBB; }
+</style>
+
+<script is:inline define:vars={{ SETTLE_AT, DISSOLVE }}>
+  // Runs synchronously so the overlay is present at first paint when it
+  // should be, and absent entirely when it should not. No flash either way.
+  (() => {
+    const KEY = 'milaedia:intro-seen';
+    const gate = document.getElementById('intro-gate');
+    if (!gate) return;
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const conn = navigator.connection;
+    const saveData = !!(conn && conn.saveData);
+    const slow = !!(conn && /^(slow-)?2g$/.test(conn.effectiveType || ''));
+    const narrow = window.matchMedia('(max-width: 640px)').matches;
+
+    let seen = false;
+    try { seen = sessionStorage.getItem(KEY) === '1'; } catch { /* private mode */ }
+
+    // Any one of these and the visitor goes straight to the content.
+    if (seen || reduced || saveData || slow || narrow) return;
+
+    gate.hidden = false;
+    document.documentElement.style.overflow = 'hidden';
+
+    const video = gate.querySelector('[data-intro-video]');
+    const skip = gate.querySelector('[data-intro-skip]');
+    let done = false;
+
+    const finish = () => {
+      if (done) return;
+      done = true;
+      try { sessionStorage.setItem(KEY, '1'); } catch { /* ignore */ }
+      gate.setAttribute('data-dissolving', '');
+      window.setTimeout(() => {
+        gate.hidden = true;
+        gate.removeAttribute('data-dissolving');
+        document.documentElement.style.overflow = '';
+        try { video.pause(); video.removeAttribute('src'); video.load(); } catch { /* ignore */ }
+        const h1 = document.querySelector('h1');
+        if (h1) { h1.setAttribute('tabindex', '-1'); h1.focus({ preventScroll: true }); }
+      }, DISSOLVE);
+    };
+
+    skip?.addEventListener('click', finish);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') finish(); });
+
+    // Begin the dissolve where the measured envelope settles, so the handoff
+    // lands on a shot that has come to rest rather than mid-move.
+    video.addEventListener('timeupdate', () => {
+      if (video.currentTime >= SETTLE_AT) finish();
+    });
+    video.addEventListener('ended', finish);
+    video.addEventListener('error', finish);   // never trap the visitor
+
+    // Load only now — preload="none" kept it off the critical path.
+    video.load();
+    const p = video.play();
+    if (p && typeof p.catch === 'function') {
+      // Autoplay with sound is refused without a gesture. The entry click on
+      // the cover IS a gesture, but a direct navigation to /home is not, so
+      // fall back to muted rather than failing to the black screen.
+      p.catch(() => {
+        video.muted = true;
+        video.play().catch(finish);
+      });
+    }
+
+    // Safety net: never hold the screen longer than the clip.
+    window.setTimeout(finish, (SETTLE_AT + 2) * 1000);
+  })();
+</script>

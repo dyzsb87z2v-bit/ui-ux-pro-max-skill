@@ -1,0 +1,23 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import IntroGate from '../components/IntroGate.astro';
+import MainHero from '../components/MainHero.astro';
+import { brand } from '../data/site';
+---
+<Base title={`${brand.wordmark} — ${brand.tagline}`}>
+  {/* The gate ships hidden. Only an inline script may reveal it, and only
+      when every condition passes. No-JS visitors never see it; the page
+      below has already rendered in full. */}
+  <IntroGate />
+  <div class="shell">
+    <SiteHeader current="/" />
+    <main id="main" class="frame">
+      <MainHero />
+    </main>
+  </div>
+</Base>
+
+<style>
+  .shell { position: relative; }
+</style>

@@ -107,3 +107,26 @@ The intro video's header labels are AI-garbled and unreadable — only
 `BOHIINT RELASES`, `COINE TIWOKS`, `SOOIR`. `src/data/site.ts` uses the six
 **legible** labels from the still composite. Correct them when the real
 labels are supplied.
+
+---
+
+## Intro handoff — technique 1, not technique 2
+
+The spec preferred **technique 2** for the intro→hero handoff (hold the
+chrome, cross-fade only the scene), because the video demonstrates exactly
+that architecture: its header and hero type stay pinned at `y=190` and
+`x=200` across all 20 sampled frames while the environment moves.
+
+**Technique 2 requires a text-free video.** Every frame of the delivered clip
+carries baked-in type — the same defect as the hero plate. Holding our live
+chrome over it would ghost against the video's own baked wordmark.
+
+So the intro plays full-frame as the rendered page it is, and dissolves
+through black into the real one — **technique 1**, which the spec named as
+the fallback. The dissolve begins at 9.4s, where the measured motion
+envelope settles (final half-second is the quietest in the clip at 40% of
+plateau), so the handoff lands on a shot that has come to rest.
+
+**Retire with:** a text-free intro clip. Then the gate can hold the chrome
+and cross-fade only the scene layer, and the two heroes become one
+continuous move.

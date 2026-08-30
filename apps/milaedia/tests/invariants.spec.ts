@@ -10,7 +10,20 @@ import { test, expect, type Page } from '@playwright/test';
 
 test.describe.configure({ timeout: 60_000 });
 
-const PAGES = ['/'];
+/**
+ * The intro gate is a transient overlay carrying the reference video, which
+ * has its own baked-in look. The invariants guard THE PAGES, so every test
+ * starts from the "already entered" state — which is also what a returning
+ * visitor and every crawler see.
+ */
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    try { sessionStorage.setItem('milaedia:intro-seen', '1'); } catch { /* ignore */ }
+  });
+});
+
+// Every page the build serves is guarded, not just the landing page.
+const PAGES = ['/', '/home'];
 
 /* ---------- helpers ---------- */
 
@@ -138,8 +151,9 @@ test.describe('invariant 3 — interface reduced to hairline', () => {
 
 /* ---------- 4. editorial type ratio ---------- */
 test.describe('invariant 4 — editorial type ratio', () => {
-  test('/: display ÷ support ≈ 6.2, with no intermediate level', async ({ page }) => {
-    await page.goto('/');
+  for (const path of PAGES)
+  test(`${path}: display ÷ support ≈ 6.2, with no intermediate level`, async ({ page }) => {
+    await page.goto(path);
     const sizes = await page.evaluate(() => {
       const el = (s: string) => document.querySelector(s);
       const px = (e: Element | null) => (e ? parseFloat(getComputedStyle(e).fontSize) : 0);
@@ -151,16 +165,22 @@ test.describe('invariant 4 — editorial type ratio', () => {
     expect(sizes.display, 'no [data-type="display"] on page').toBeGreaterThan(0);
     expect(sizes.tagline, 'no [data-type="tagline"] on page').toBeGreaterThan(0);
     const ratio = sizes.display / sizes.tagline;
-    // Measured 6.2:1. Allow drift for fluid clamping, but a "balanced"
-    // modular scale (3–4:1) must fail — the gap IS the luxury.
-    expect(ratio, `display:support ratio ${ratio.toFixed(2)}`).toBeGreaterThanOrEqual(5.0);
+    // Measured 6.2:1 at reference width. Spec §09 explicitly allows the
+    // ratio to compress to ~4.5:1 below 640px — 8.3% of viewport width is
+    // only 31px at 375px, which is no longer a hero. What must NOT change at
+    // any width is the absence of a middle tier. A "balanced" modular scale
+    // (3–4:1) still fails everywhere.
+    const width = page.viewportSize()?.width ?? 1440;
+    const floor = width <= 640 ? 4.4 : 5.0;
+    expect(ratio, `display:support ratio ${ratio.toFixed(2)} at ${width}px`).toBeGreaterThanOrEqual(floor);
   });
 });
 
 /* ---------- 5. asymmetric panel rhythm ---------- */
 test.describe('invariant 5 — asymmetric panel rhythm', () => {
-  test('/: no repeat(n, 1fr) in scene rows', async ({ page }) => {
-    await page.goto('/');
+  for (const path of PAGES)
+  test(`${path}: no repeat(n, 1fr) in scene rows`, async ({ page }) => {
+    await page.goto(path);
     const uniform = await page.evaluate(() => {
       const out: string[] = [];
       for (const el of Array.from(document.querySelectorAll('[data-scene-row]'))) {
@@ -179,8 +199,9 @@ test.describe('invariant 5 — asymmetric panel rhythm', () => {
 
 /* ---------- 6. temperature encodes state ---------- */
 test.describe('invariant 6 — temperature encodes state', () => {
-  test('/: every interactive colour is on the gold or silver ramp, and current is gold', async ({ page }) => {
-    await page.goto('/');
+  for (const path of PAGES)
+  test(`${path}: every interactive colour is on the gold or silver ramp, and current is gold`, async ({ page }) => {
+    await page.goto(path);
     const result = await page.evaluate(() => {
       const rgb = (c: string) => (c.match(/\d+/g) ?? []).slice(0, 3).map(Number);
       // Gold ramp: warm, red-dominant. Silver ramp: achromatic.
