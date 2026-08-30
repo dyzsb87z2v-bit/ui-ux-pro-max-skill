@@ -76,7 +76,7 @@ import Divider from '../components/primitives/Divider.astro';
     linesEl.innerHTML = lines.map((l) => `
       <li class="line">
         <div class="li-meta">
-          <a href="/collections/${''}${l.slug ? '' : ''}#" class="li-title">${l.title}</a>
+          <a href="${l.href || '/collections'}" class="li-title">${l.title}</a>
           <span class="li-price">${fmt(l.priceMinor, l.currency)}</span>
         </div>
         <div class="li-ctl">

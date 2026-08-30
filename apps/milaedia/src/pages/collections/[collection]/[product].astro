@@ -88,6 +88,12 @@ const specs: [string, string][] = [
             tone={tone}
             disabled={!avail.purchasable}
             class="add"
+            data-add-line={JSON.stringify({
+              productId: p.id, slug: p.slug, title: p.title,
+              priceMinor: p.priceMinor, currency: p.currency,
+              maxQty: p.inventoryMode === 'one_of_one' ? 1 : Math.max(1, p.stockQty ?? 9),
+              image: p.image, href: `/collections/${p.collection}/${p.slug}`,
+            })}
           >{ctaLabel}</GhostButton>
           <a class="enquire" href={`/custom?ref=${p.slug}`}>Enquire about this piece</a>
         </div>
@@ -120,16 +126,21 @@ const specs: [string, string][] = [
   <SiteFooter />
 
   <script type="application/ld+json" set:html={JSON.stringify(productSchema(p, site))} />
-  <script define:vars={{
-    line: {
-      productId: p.id, slug: p.slug, title: p.title,
-      priceMinor: p.priceMinor, currency: p.currency,
-      maxQty: p.inventoryMode === 'one_of_one' ? 1 : Math.max(1, (p.stockQty ?? 9)),
-      image: p.image,
-    },
-    purchasable: avail.purchasable,
-  }}>
-    import('/src/lib/bag.ts').catch(() => {});
+  <script>
+    import { addToBag } from '../../../lib/bag';
+
+    const btn = document.querySelector<HTMLElement>('[data-add-line]');
+    const added = document.querySelector<HTMLElement>('[data-added]');
+    if (btn && btn.getAttribute('aria-disabled') !== 'true') {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        addToBag(JSON.parse(btn.dataset.addLine!));
+        if (added) added.hidden = false;
+        const lab = btn.querySelector('[data-ghost-label]') ?? btn;
+        lab.textContent = 'Added to bag';
+        window.setTimeout(() => { lab.textContent = 'Add to bag'; }, 2200);
+      });
+    }
   </script>
 </Base>
 

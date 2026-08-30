@@ -18,6 +18,8 @@ export interface BagLine {
   /** one_of_one lines can never exceed 1. */
   maxQty: number;
   image: string;
+  /** Canonical product URL, so the bag can link back. */
+  href?: string;
 }
 
 const KEY = 'milaedia:bag:v1';
