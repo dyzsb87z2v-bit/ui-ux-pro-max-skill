@@ -1,0 +1,96 @@
+---
+import { Picture } from 'astro:assets';
+import { collectionImages } from '../lib/images';
+import { formatPrice, type Product } from '../data/catalogue';
+import { deriveAvailability, stateTone } from '../lib/inventory';
+
+interface Props { product: Product; eager?: boolean }
+const { product: p, eager = false } = Astro.props;
+const img = collectionImages[p.image];
+const avail = deriveAvailability({
+  mode: p.inventoryMode, stockQty: p.stockQty, reservedQty: p.reservedQty,
+  soldAt: p.soldAt ? new Date(p.soldAt) : null, reservedUntil: null,
+  leadTimeDays: p.leadTimeDays, lowThreshold: p.lowThreshold,
+});
+const tone = stateTone(avail.availability);
+const label: Record<string, string> = {
+  InStock: '', Reserved: 'Reserved', LimitedAvailability: 'Few remaining',
+  OutOfStock: 'Unavailable', SoldOut: 'Sold', PreOrder: 'Made to order',
+};
+---
+<a class="pcard" href={`/collections/${p.collection}/${p.slug}`} data-tilt>
+  <span class="art" aria-hidden="true">
+    <Picture src={img} alt="" widths={[300, 600]} sizes="(max-width:640px) 88vw, 30vw"
+             formats={['avif']} fallbackFormat="webp" quality={64}
+             loading={eager ? 'eager' : 'lazy'} />
+  </span>
+  <span class="meta">
+    <span class="name">{p.title}</span>
+    <span class="spec">{p.dimensionsCm[0]} × {p.dimensionsCm[1]} cm · {p.origin}</span>
+    <span class="row">
+      <span class="price" data-tone={tone}>{formatPrice(p.priceMinor, p.currency)}</span>
+      {label[avail.availability] && <span class="state" data-tone={tone}>{label[avail.availability]}</span>}
+    </span>
+  </span>
+</a>
+
+<style>
+  .pcard {
+    display: grid; gap: 1rem; text-decoration: none; color: var(--silver);
+    transform: perspective(1000px) rotateY(var(--ty,0deg)) rotateX(var(--tx,0deg));
+    transition: transform 520ms var(--ease-cinematic);
+  }
+  .art {
+    display: block; aspect-ratio: 4/5; overflow: hidden;
+    border: var(--border) solid var(--hairline); border-radius: var(--radius-card);
+    background: var(--panel);
+  }
+  .art :global(img) {
+    inline-size: 100%; block-size: 100%; object-fit: cover;
+    transform: scale(var(--s,1)); transition: transform 700ms var(--ease-cinematic);
+  }
+  .pcard:hover .art :global(img) { --s: 1.045; }
+  .pcard:hover .art, .pcard:focus-visible .art { border-color: var(--gold); }
+
+  .meta { display: grid; gap: 0.45em; }
+  .name {
+    font-family: var(--font-display); font-size: var(--type-card-title);
+    letter-spacing: var(--track-card); color: var(--silver-hi);
+  }
+  .spec {
+    font-family: var(--font-display); font-size: var(--type-card-link);
+    color: var(--silver); opacity: 0.6;
+  }
+  .row { display: flex; gap: 0.9em; align-items: baseline; flex-wrap: wrap; }
+  .price {
+    font-family: var(--font-display); font-size: var(--type-card-link);
+    font-variant-numeric: tabular-nums; color: var(--silver-hi);
+  }
+  /* Non-purchasable drops from gold to silver — temperature is the state. */
+  .price[data-tone='silver'] { opacity: 0.55; text-decoration: line-through; }
+  .state {
+    font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-nav); text-transform: uppercase;
+  }
+  .state[data-tone='gold'] { color: var(--gold); }
+  .state[data-tone='silver'] { color: var(--silver); opacity: 0.7; }
+  @media (prefers-reduced-motion: reduce) { .pcard, .art :global(img) { transition: none; } }
+</style>
+
+<script>
+  import { prefersLessMotion } from '../lib/depth';
+  if (!prefersLessMotion() && window.matchMedia('(pointer: fine)').matches) {
+    for (const c of document.querySelectorAll<HTMLElement>('.pcard[data-tilt]')) {
+      c.addEventListener('pointermove', (e) => {
+        const r = c.getBoundingClientRect();
+        const nx = ((e.clientX - r.left) / r.width) * 2 - 1;
+        const ny = ((e.clientY - r.top) / r.height) * 2 - 1;
+        c.style.setProperty('--ty', `${(nx * 3).toFixed(2)}deg`);
+        c.style.setProperty('--tx', `${(-ny * 2).toFixed(2)}deg`);
+      }, { passive: true });
+      c.addEventListener('pointerleave', () => {
+        c.style.setProperty('--ty', '0deg'); c.style.setProperty('--tx', '0deg');
+      }, { passive: true });
+    }
+  }
+</script>

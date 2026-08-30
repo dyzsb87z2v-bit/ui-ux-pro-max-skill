@@ -23,7 +23,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 // Every page the build serves is guarded, not just the landing page.
-const PAGES = ['/', '/home', '/collections'];
+const PAGES = ['/', '/home', '/collections', '/collections/antique-rugs',
+  '/collections/antique-rugs/kashan-medallion-antique', '/gallery', '/custom',
+  '/about', '/workshop', '/contact', '/bag', '/checkout', '/search'];
 
 /* ---------- helpers ---------- */
 
@@ -150,8 +152,9 @@ test.describe('invariant 3 — interface reduced to hairline', () => {
 });
 
 /* ---------- 4. editorial type ratio ---------- */
+const DISPLAY_PAGES = ['/', '/home', '/collections'];
 test.describe('invariant 4 — editorial type ratio', () => {
-  for (const path of PAGES)
+  for (const path of DISPLAY_PAGES)
   test(`${path}: display ÷ support ≈ 6.2, with no intermediate level`, async ({ page }) => {
     await page.goto(path);
     const sizes = await page.evaluate(() => {

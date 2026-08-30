@@ -1,0 +1,121 @@
+---
+import Base from '../../layouts/Base.astro';
+import Ornament from '../../components/primitives/Ornament.astro';
+import Icon from '../../components/primitives/Icon.astro';
+import { products } from '../../data/catalogue';
+import { collections } from '../../data/site';
+
+/**
+ * Admin foundation.
+ *
+ * SECURITY: this route carries `noindex` and is excluded from the sitemap.
+ * It is a SHELL — it renders read-only counts from the catalogue module and
+ * exposes no mutation. Real administration must sit behind edge auth
+ * (Cloudflare Access, free for ≤50 users) before any write path is added.
+ * The rail below is the measured admin composition: 25px item pitch,
+ * geometric sans, gold-on-#332C21 active pill.
+ */
+const sections = [
+  ['Dashboard', '/admin', true],
+  ['Orders', '/admin', false],
+  ['Products', '/admin', false],
+  ['Collections', '/admin', false],
+  ['Customers', '/admin', false],
+  ['Messages', '/admin', false],
+  ['Settings', '/admin', false],
+  ['Reports', '/admin', false],
+] as const;
+
+const stats = [
+  ['Products', String(products.length)],
+  ['Collections', String(collections.length)],
+  ['One-of-one', String(products.filter(p => p.inventoryMode === 'one_of_one').length)],
+  ['Made to order', String(products.filter(p => p.inventoryMode === 'made_to_order').length)],
+  ['Sold (archive)', String(products.filter(p => p.soldAt).length)],
+  ['3D models', String(products.filter(p => p.model).length)],
+];
+---
+<Base title="Admin — MiLAEDiA">
+  <meta slot="head" name="robots" content="noindex, nofollow" />
+  <div class="admin">
+    <aside class="rail" aria-label="Administration">
+      <a class="brand" href="/"><Ornament variant="lozenge" size="1.2em" class="a-mark" /><span>MiLAEDiA</span></a>
+      <nav><ul>
+        {sections.map(([label, href, active]) => (
+          <li><a href={href} aria-current={active ? 'page' : undefined}>{label}</a></li>
+        ))}
+      </ul></nav>
+      <a class="out" href="/">Leave admin</a>
+    </aside>
+
+    <main id="main" class="apanel">
+      <h1>Dashboard</h1>
+      <p class="lead">
+        Read-only foundation. No write path is exposed and no authentication is
+        configured on this deployment — connect edge auth before adding one.
+      </p>
+
+      <ul class="stats" role="list">
+        {stats.map(([k, v]) => (<li><span class="sv">{v}</span><span class="sk">{k}</span></li>))}
+      </ul>
+
+      <h2>Where content lives</h2>
+      <dl class="where">
+        <dt>Products, prices, availability</dt><dd><code>src/data/catalogue.ts</code></dd>
+        <dt>Collections</dt><dd><code>src/data/site.ts</code></dd>
+        <dt>3D models</dt><dd>set <code>model</code> on a product record; drop the GLB in <code>public/models/</code></dd>
+        <dt>Product imagery</dt><dd><code>src/assets/collections/</code> via <code>src/lib/images.ts</code></dd>
+        <dt>Scene &amp; atelier media</dt><dd><code>src/assets/scene/</code>, <code>src/assets/atelier/</code>, <code>public/media/</code></dd>
+        <dt>Design tokens</dt><dd><code>src/styles/tokens.css</code></dd>
+        <dt>Payment integration</dt><dd><code>src/lib/payment.ts</code> — the only file a provider touches</dd>
+        <dt>Legal copy</dt><dd><code>src/pages/legal/</code></dd>
+      </dl>
+    </main>
+  </div>
+</Base>
+
+<style>
+  .admin { display: grid; grid-template-columns: clamp(190px, 18vw, 240px) 1fr; min-block-size: 100vh; }
+  .rail { border-inline-end: 1px solid var(--hairline); padding: 1.4rem 1rem;
+    display: grid; align-content: start; gap: 1.4rem; }
+  .brand { display: inline-flex; align-items: center; gap: .55em; text-decoration: none;
+    color: var(--gold-hi); font-family: var(--font-display); font-size: 1rem; }
+  .brand :global(.a-mark) { color: var(--gold); }
+  .rail nav ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .rail nav a {
+    display: block; padding: .55em .8em; border-radius: 4px; text-decoration: none;
+    /* ADMIN ONLY — the geometric sans never appears on the public site. */
+    font-family: var(--font-ui); font-size: .82rem; letter-spacing: .02em;
+    /* Measured contrast fix: the reference's idle label failed AA at 2.88:1. */
+    color: #7A7670;
+  }
+  .rail nav a:hover { color: var(--silver-hi); }
+  .rail nav a[aria-current='page'] { background: var(--active-fill); color: var(--gold-hi); }
+  .out { font-family: var(--font-ui); font-size: .78rem; color: var(--silver); text-decoration: none; }
+  .out:hover { color: var(--gold-hi); }
+
+  .apanel { padding: clamp(1.5rem, 4vw, 3rem); display: grid; gap: 1.6rem; align-content: start; }
+  h1 { margin: 0; font-family: var(--font-display); font-weight: 300;
+    font-size: clamp(1.8rem, 4vw, 2.8rem); color: #EDE7DA; }
+  h2 { margin: 1.5rem 0 0; font-family: var(--font-display); font-weight: 400;
+    font-size: 1.15rem; color: #EDE7DA; }
+  .lead { margin: 0; font-family: var(--font-ui); font-size: .9rem; line-height: 1.8;
+    color: var(--silver); max-inline-size: 62ch; }
+  .stats { list-style: none; margin: 0; padding: 0; display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px;
+    background: var(--hairline-soft); border: 1px solid var(--hairline-soft);
+    border-radius: var(--radius); overflow: hidden; }
+  .stats li { background: var(--panel); padding: 1.1rem 1.2rem; display: grid; gap: .3em; }
+  .sv { font-family: var(--font-display); font-size: 1.8rem; color: var(--gold-hi);
+    font-variant-numeric: tabular-nums; line-height: 1; }
+  .sk { font-family: var(--font-ui); font-size: .72rem; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--silver); opacity: .7; }
+  .where { display: grid; grid-template-columns: auto 1fr; gap: .6em 1.5rem; margin: 0;
+    font-family: var(--font-ui); font-size: .85rem; }
+  .where dt { color: var(--bronze); }
+  .where dd { margin: 0; color: var(--silver-hi); }
+  code { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: .9em;
+    color: var(--gold-hi); background: rgba(185,151,99,.08); padding: .1em .4em; border-radius: 3px; }
+  @media (max-width: 700px) { .admin { grid-template-columns: 1fr; } .rail { border-inline-end: 0;
+    border-block-end: 1px solid var(--hairline); } }
+</style>

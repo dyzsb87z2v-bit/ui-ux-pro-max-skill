@@ -1,0 +1,216 @@
+---
+import Base from '../../../layouts/Base.astro';
+import SiteHeader from '../../../components/SiteHeader.astro';
+import SiteFooter from '../../../components/SiteFooter.astro';
+import RugViewer from '../../../components/RugViewer.astro';
+import ProductCard from '../../../components/ProductCard.astro';
+import Divider from '../../../components/primitives/Divider.astro';
+import GhostButton from '../../../components/primitives/GhostButton.astro';
+import Section from '../../../components/primitives/Section.astro';
+import { products, formatPrice, byCollection } from '../../../data/catalogue';
+import { collections } from '../../../data/site';
+import { collectionImages } from '../../../lib/images';
+import { deriveAvailability, stateTone } from '../../../lib/inventory';
+import { productSchema } from '../../../lib/seo';
+
+export function getStaticPaths() {
+  return products.map((p) => ({
+    params: { collection: p.collection, product: p.slug },
+    props: { product: p },
+  }));
+}
+
+const { product: p } = Astro.props;
+const collection = collections.find((c) => c.slug === p.collection)!;
+const img = collectionImages[p.image];
+
+const avail = deriveAvailability({
+  mode: p.inventoryMode, stockQty: p.stockQty, reservedQty: p.reservedQty,
+  soldAt: p.soldAt ? new Date(p.soldAt) : null, reservedUntil: null,
+  leadTimeDays: p.leadTimeDays, lowThreshold: p.lowThreshold,
+});
+const tone = stateTone(avail.availability);
+
+const ctaLabel =
+  avail.availability === 'SoldOut' ? 'Sold'
+  : avail.availability === 'OutOfStock' ? 'Unavailable'
+  : avail.availability === 'Reserved' ? 'Reserved'
+  : avail.availability === 'PreOrder' ? 'Commission this piece'
+  : 'Add to bag';
+
+const related = byCollection(p.collection).filter((r) => r.slug !== p.slug).slice(0, 3);
+const site = Astro.site?.toString().replace(/\/$/, '') ?? '';
+
+const specs: [string, string][] = [
+  ['Collection', collection.title],
+  ['Origin', p.origin],
+  ['Material', p.material],
+  ['Weave', p.weave],
+  ['Knot density', p.knotDensity],
+  ['Dimensions', `${p.dimensionsCm[0]} × ${p.dimensionsCm[1]} cm`],
+  ...(p.ageNote ? [['Period', p.ageNote] as [string, string]] : []),
+  ...(avail.leadTimeDays ? [['Lead time', `${avail.leadTimeDays} days`] as [string, string]] : []),
+];
+---
+<Base title={`${p.title} — ${collection.title} — MiLAEDiA`} description={p.summary}>
+  <SiteHeader current="/collections" />
+  <main id="main" class="frame">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/collections">Collections</a>
+      <span aria-hidden="true">/</span>
+      <a href={`/collections/${collection.slug}`}>{collection.title}</a>
+    </nav>
+
+    <div class="lede">
+      <div class="visual">
+        <RugViewer image={img} alt={`${p.title} — ${p.material}`} model={p.model} title={p.title} />
+      </div>
+
+      <div class="buy">
+        <p class="coll" data-uppercase>{collection.title}</p>
+        <h1 class="name">{p.title}</h1>
+        <p class="summary">{p.summary}</p>
+
+        <Divider class="buy-divider" />
+
+        <p class="price" data-tone={tone}>{formatPrice(p.priceMinor, p.currency)}</p>
+        <p class="avail" data-tone={tone}>
+          {avail.availability === 'InStock' && 'Available — one piece'}
+          {avail.availability === 'LimitedAvailability' && `Few remaining (${(p.stockQty ?? 0) - p.reservedQty})`}
+          {avail.availability === 'PreOrder' && `Made to order — approximately ${avail.leadTimeDays} days`}
+          {avail.availability === 'SoldOut' && 'Sold. Retained in the house archive.'}
+          {avail.availability === 'OutOfStock' && 'Currently unavailable.'}
+          {avail.availability === 'Reserved' && 'Reserved by another client.'}
+        </p>
+
+        <div class="actions">
+          <GhostButton
+            tone={tone}
+            disabled={!avail.purchasable}
+            class="add"
+          >{ctaLabel}</GhostButton>
+          <a class="enquire" href={`/custom?ref=${p.slug}`}>Enquire about this piece</a>
+        </div>
+
+        <p class="added" data-added hidden>Added to your bag. <a href="/bag">View bag</a></p>
+
+        <dl class="specs">
+          {specs.map(([k, v]) => (<><dt>{k}</dt><dd>{v}</dd></>))}
+        </dl>
+      </div>
+    </div>
+
+    <Section title="About this piece" align="start" class="story">
+      <p class="body">{p.description}</p>
+      <div class="notes">
+        <div><h3>Care</h3><p>{p.care}</p></div>
+        <div><h3>Shipping</h3><p>Insured freight, crated. Quoted per destination after checkout.</p></div>
+        <div><h3>Authenticity</h3><p>Each piece leaves the atelier with its own record of origin, material and weave.</p></div>
+      </div>
+    </Section>
+
+    {related.length > 0 && (
+      <Section eyebrow="Also in this collection" title="Related pieces" align="start" tight>
+        <div class="related">
+          {related.map((r) => <ProductCard product={r} />)}
+        </div>
+      </Section>
+    )}
+  </main>
+  <SiteFooter />
+
+  <script type="application/ld+json" set:html={JSON.stringify(productSchema(p, site))} />
+  <script define:vars={{
+    line: {
+      productId: p.id, slug: p.slug, title: p.title,
+      priceMinor: p.priceMinor, currency: p.currency,
+      maxQty: p.inventoryMode === 'one_of_one' ? 1 : Math.max(1, (p.stockQty ?? 9)),
+      image: p.image,
+    },
+    purchasable: avail.purchasable,
+  }}>
+    import('/src/lib/bag.ts').catch(() => {});
+  </script>
+</Base>
+
+<style>
+  .crumbs {
+    display: flex; gap: 0.6em; align-items: center;
+    padding-block: clamp(80px, 13vh, 150px) 0;
+    font-family: var(--font-display); font-size: var(--type-card-link);
+    letter-spacing: var(--track-nav); text-transform: uppercase;
+  }
+  .crumbs a { color: var(--silver); text-decoration: none; }
+  .crumbs a:hover { color: var(--gold-hi); }
+  .crumbs span { color: var(--bronze); }
+
+  .lede {
+    display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: clamp(1.5rem, 4vw, 4rem); align-items: start;
+    padding-block: clamp(1.5rem, 4vh, 3rem);
+  }
+  .visual { position: sticky; top: clamp(72px, 10vh, 110px); }
+
+  .buy { display: grid; gap: 0.9rem; align-content: start; padding-block-start: 1rem; }
+  .coll {
+    margin: 0; font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities); text-transform: uppercase; color: var(--bronze);
+  }
+  .name {
+    margin: 0; font-family: var(--font-display); font-weight: 300;
+    font-size: clamp(2rem, 4.4vw, 3.4rem); line-height: 1.05; color: #EDE7DA;
+  }
+  .summary { margin: 0; font-family: var(--font-display); font-size: 1.05rem; line-height: 1.8; color: var(--silver); }
+  .buy :global(.buy-divider) { inline-size: 100%; margin-block: 0.4rem; }
+
+  .price {
+    margin: 0; font-family: var(--font-display); font-size: 1.5rem;
+    font-variant-numeric: tabular-nums; color: var(--silver-hi);
+  }
+  .price[data-tone='silver'] { opacity: 0.5; text-decoration: line-through; }
+  .avail {
+    margin: 0; font-family: var(--font-display); font-size: var(--type-card-link);
+    letter-spacing: 0.03em;
+  }
+  .avail[data-tone='gold'] { color: var(--gold); }
+  .avail[data-tone='silver'] { color: var(--silver); opacity: 0.7; }
+
+  .actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-block-start: 0.6rem; }
+  .enquire {
+    font-family: var(--font-display); font-size: var(--type-card-link);
+    color: var(--silver); text-decoration: none; border-block-end: 1px solid var(--hairline);
+    padding-block-end: 2px;
+  }
+  .enquire:hover { color: var(--gold-hi); border-color: var(--gold); }
+
+  .added { margin: 0; font-family: var(--font-display); font-size: var(--type-card-link); color: var(--gold); }
+  .added a { color: var(--gold-hi); }
+
+  .specs {
+    display: grid; grid-template-columns: auto 1fr; gap: 0.55em 1.6em;
+    margin: 1.4rem 0 0; padding-block-start: 1.4rem;
+    border-block-start: 1px solid var(--hairline-soft);
+    font-family: var(--font-display); font-size: var(--type-card-link);
+  }
+  .specs dt { color: var(--bronze); letter-spacing: var(--track-nav); text-transform: uppercase; font-size: 0.86em; }
+  .specs dd { margin: 0; color: var(--silver-hi); }
+
+  .story .body { font-family: var(--font-display); font-size: 1.1rem; line-height: 1.95; color: var(--silver); max-inline-size: 62ch; }
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 2rem; margin-block-start: 2.5rem; }
+  .notes h3 {
+    margin: 0 0 0.5em; font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities); text-transform: uppercase; color: var(--bronze); font-weight: 400;
+  }
+  .notes p { margin: 0; font-family: var(--font-display); font-size: var(--type-card-link); line-height: 1.85; color: var(--silver); }
+
+  .related { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-adjacent); }
+
+  @media (max-width: 900px) {
+    .lede { grid-template-columns: 1fr; }
+    .visual { position: static; }
+    .related { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .related { grid-template-columns: 1fr; }
+  }
+</style>

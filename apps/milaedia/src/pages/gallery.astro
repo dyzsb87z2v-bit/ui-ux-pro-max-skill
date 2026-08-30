@@ -1,0 +1,179 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import Divider from '../components/primitives/Divider.astro';
+import Icon from '../components/primitives/Icon.astro';
+import { Picture } from 'astro:assets';
+import { collectionImages, scene } from '../lib/images';
+
+/**
+ * Gallery — an exhibition hang, not a masonry plugin.
+ *
+ * Sizes are deliberate and asymmetric: a full-bleed plate, then paired
+ * portraits, then a wide plate. The rhythm is the point.
+ *
+ * BLOCKED ASSET: the reference gallery hall (a 2.67:1 one-point-perspective
+ * plate with the wordmark on its vanishing point) was never exported and
+ * exists only at 480×180 inside a compressed JPEG. Until it is regenerated
+ * this page hangs the verified pieces instead. See PLACEHOLDERS.md.
+ */
+const works = [
+  { src: scene.weaverStill, w: 'tall',  cap: 'At the loom — a rug worked by hand' },
+  { src: collectionImages['antique-rugs'], w: 'wide', cap: 'Antique — madder and indigo, settled by a century of light' },
+  { src: scene.floorRug, w: 'wide', cap: 'A rug laid on marble, Berlin' },
+  { src: collectionImages['handwoven-silk-rugs'], w: 'tall', cap: 'Silk on silk — two colourways in one piece' },
+  { src: collectionImages['antique-silk-tapestries'], w: 'tall', cap: 'Pictorial silk after a European cartoon' },
+  { src: scene.rugDetail, w: 'wide', cap: 'Medallion, detail' },
+  { src: collectionImages['luxury-silk-tapestries'], w: 'tall', cap: 'Still life in pure silk' },
+  { src: scene.windowTriptych, w: 'full', cap: 'Berlin at blue hour, from the atelier' },
+];
+---
+<Base title="Gallery — MiLAEDiA" description="An exhibition of pieces from the house.">
+  <SiteHeader current="/gallery" />
+  <main id="main" class="frame">
+    <header class="gh">
+      <h1>Gallery</h1>
+      <p class="lede">Pieces from the house, hung as they would be shown.</p>
+      <Divider class="gh-divider" />
+    </header>
+
+    <div class="hang" data-gallery>
+      {works.map((w, i) => (
+        <figure class={`work w-${w.w}`}>
+          <button type="button" class="open" data-open={i} aria-label={`View larger: ${w.cap}`}>
+            <Picture src={w.src} alt={w.cap} widths={[420, 900]} sizes="(max-width:640px) 92vw, 44vw"
+                     formats={['avif']} fallbackFormat="webp" quality={66}
+                     loading={i < 2 ? 'eager' : 'lazy'} />
+          </button>
+          <figcaption>{w.cap}</figcaption>
+        </figure>
+      ))}
+    </div>
+  </main>
+
+  <div class="lightbox" data-lightbox hidden role="dialog" aria-modal="true" aria-label="Gallery viewer">
+    <button class="lb-close" data-lb-close aria-label="Close"><Icon name="close" size="1.4em" /></button>
+    <button class="lb-nav lb-prev" data-lb-prev aria-label="Previous">&lsaquo;</button>
+    <figure class="lb-fig">
+      <img data-lb-img alt="">
+      <figcaption data-lb-cap></figcaption>
+    </figure>
+    <button class="lb-nav lb-next" data-lb-next aria-label="Next">&rsaquo;</button>
+  </div>
+
+  <SiteFooter />
+</Base>
+
+<style>
+  .gh { display:grid; gap:1rem; padding-block: clamp(90px,14vh,170px) clamp(2rem,5vh,3.5rem); }
+  h1 { margin:0; font-family: var(--font-display); font-weight:300;
+    font-size: clamp(2.6rem,7vw,5.4rem); line-height:1; color:#EDE7DA; }
+  .lede { margin:0; font-family: var(--font-display); font-size: clamp(1rem,1.5vw,1.2rem);
+    color: var(--silver); max-inline-size:48ch; }
+  .gh :global(.gh-divider) { inline-size: min(340px,60%); }
+
+  /* Deliberate, asymmetric hang. */
+  .hang { display:grid; grid-template-columns: repeat(6,1fr);
+    gap: clamp(1rem,2.5vw,2.2rem); padding-block-end: clamp(3rem,8vh,6rem); }
+  .work { margin:0; display:grid; gap:.7rem; }
+  .w-tall { grid-column: span 2; }
+  .w-wide { grid-column: span 4; }
+  .w-full { grid-column: 1 / -1; }
+  .open {
+    display:block; inline-size:100%; padding:0; background:none; cursor:zoom-in;
+    border:1px solid var(--hairline); border-radius: var(--radius-card); overflow:hidden;
+  }
+  .open:hover, .open:focus-visible { border-color: var(--gold); }
+  .w-tall .open { aspect-ratio: 3/4; }
+  .w-wide .open { aspect-ratio: 16/9; }
+  .w-full .open { aspect-ratio: 21/9; }
+  .open :global(img) { inline-size:100%; block-size:100%; object-fit:cover;
+    transform: scale(var(--s,1)); transition: transform 800ms var(--ease-cinematic); }
+  .open:hover :global(img) { --s: 1.04; }
+  figcaption { font-family: var(--font-display); font-size: var(--type-card-link);
+    color: var(--silver); opacity:.62; }
+
+  .lightbox {
+    position:fixed; inset:0; z-index:80; background: rgba(6,5,6,.97);
+    display:grid; grid-template-columns:auto 1fr auto; align-items:center;
+    gap: clamp(.5rem,2vw,2rem); padding: clamp(1rem,4vw,3rem);
+  }
+  .lightbox[hidden] { display:none; }
+  .lb-fig { margin:0; display:grid; gap:1rem; justify-items:center; max-block-size:88vh; }
+  .lb-fig img { max-inline-size:100%; max-block-size:78vh; object-fit:contain;
+    border:1px solid var(--hairline); border-radius: var(--radius-card); }
+  .lb-fig figcaption { font-family: var(--font-display); font-size: var(--type-card-link);
+    color: var(--silver); text-align:center; }
+  .lb-close { position:absolute; inset-block-start: clamp(1rem,3vh,2rem);
+    inset-inline-end: clamp(1rem,4vw,3rem); background:none; border:0; color: var(--gold-hi); cursor:pointer; }
+  .lb-nav { background:none; border:1px solid var(--hairline); border-radius:5px;
+    color: var(--gold); font-size:1.6rem; line-height:1; padding:.4em .7em; cursor:pointer; }
+  .lb-nav:hover { color: var(--gold-hi); border-color: var(--gold); }
+
+  @media (max-width: 900px) {
+    .hang { grid-template-columns: repeat(4,1fr); }
+    .w-tall { grid-column: span 2; } .w-wide { grid-column: span 4; }
+  }
+  @media (max-width: 640px) {
+    .hang { grid-template-columns: 1fr; }
+    .w-tall, .w-wide, .w-full { grid-column: 1 / -1; }
+    .lightbox { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+    .lb-nav { justify-self:center; }
+  }
+  @media (prefers-reduced-motion: reduce) { .open :global(img) { transition:none; } }
+</style>
+
+<script>
+  const box = document.querySelector<HTMLElement>('[data-lightbox]')!;
+  const imgEl = box.querySelector<HTMLImageElement>('[data-lb-img]')!;
+  const capEl = box.querySelector<HTMLElement>('[data-lb-cap]')!;
+  const figs = Array.from(document.querySelectorAll<HTMLElement>('.work'));
+  let idx = 0, last: HTMLElement | null = null;
+
+  const paint = () => {
+    const f = figs[idx];
+    const src = f.querySelector('img')!;
+    imgEl.src = src.currentSrc || src.src;
+    imgEl.alt = src.alt;
+    capEl.textContent = f.querySelector('figcaption')!.textContent;
+  };
+  const open = (i: number) => {
+    idx = i; last = document.activeElement as HTMLElement;
+    paint(); box.hidden = false;
+    document.documentElement.style.overflow = 'hidden';
+    box.querySelector<HTMLButtonElement>('[data-lb-close]')!.focus();
+  };
+  const close = () => {
+    box.hidden = true; document.documentElement.style.overflow = '';
+    last?.focus();
+  };
+  const step = (d: number) => { idx = (idx + d + figs.length) % figs.length; paint(); };
+
+  document.querySelectorAll<HTMLButtonElement>('[data-open]').forEach((b) =>
+    b.addEventListener('click', () => open(Number(b.dataset.open))));
+  box.querySelector('[data-lb-close]')!.addEventListener('click', close);
+  box.querySelector('[data-lb-prev]')!.addEventListener('click', () => step(-1));
+  box.querySelector('[data-lb-next]')!.addEventListener('click', () => step(1));
+
+  document.addEventListener('keydown', (e) => {
+    if (box.hidden) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowLeft') step(-1);
+    if (e.key === 'ArrowRight') step(1);
+    if (e.key === 'Tab') {
+      const f = box.querySelectorAll<HTMLElement>('button');
+      const first = f[0], lastEl = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); lastEl.focus(); }
+      else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); first.focus(); }
+    }
+  });
+
+  // Touch: swipe between works.
+  let sx = 0;
+  box.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });
+  box.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - sx;
+    if (Math.abs(dx) > 60) step(dx < 0 ? 1 : -1);
+  }, { passive: true });
+</script>

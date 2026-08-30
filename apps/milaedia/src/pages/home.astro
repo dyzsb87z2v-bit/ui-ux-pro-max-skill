@@ -1,23 +1,256 @@
 ---
 import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
 import IntroGate from '../components/IntroGate.astro';
 import MainHero from '../components/MainHero.astro';
-import { brand } from '../data/site';
+import AtelierScene from '../components/AtelierScene.astro';
+import CollectionCard from '../components/CollectionCard.astro';
+import ProductCard from '../components/ProductCard.astro';
+import Section from '../components/primitives/Section.astro';
+import Divider from '../components/primitives/Divider.astro';
+import GhostButton from '../components/primitives/GhostButton.astro';
+import Ornament from '../components/primitives/Ornament.astro';
+import { Picture } from 'astro:assets';
+import { brand, collections, trust } from '../data/site';
+import { products } from '../data/catalogue';
+import { collectionImages, scene } from '../lib/images';
+import { ORG } from '../lib/seo';
+
+const featuredCollections = collections.slice(0, 3);
+const featuredRugs = products.filter((p) => !p.soldAt).slice(0, 3);
 ---
 <Base title={`${brand.wordmark} — ${brand.tagline}`}>
-  {/* The gate ships hidden. Only an inline script may reveal it, and only
-      when every condition passes. No-JS visitors never see it; the page
-      below has already rendered in full. */}
   <IntroGate />
   <div class="shell">
     <SiteHeader current="/" />
+
     <main id="main" class="frame">
+      <!-- HERO -->
       <MainHero />
+
+      <!-- BRAND / ATELIER STATEMENT -->
+      <Section class="statement" align="center">
+        <Ornament variant="lozenge" size="2.4rem" class="st-mark" />
+        <p class="st-text">
+          A rug is the slowest object in a room. It is made one knot at a time,
+          by hand, over months — and then it stays for a generation.
+          MiLAEDiA sources and commissions pieces worth that patience.
+        </p>
+        <Divider class="st-divider" />
+        <p class="st-cities" data-uppercase>{brand.cities.join(' · ')}</p>
+      </Section>
+
+      <!-- FEATURED COLLECTIONS — asymmetric, not a uniform grid -->
+      <Section eyebrow="Collections" title="Where to begin"
+               lede="Five collections, hand-authored. Antique pieces carrying a century of use, contemporary weaving from named workshops, and pictorial silk made for the wall."
+               align="start">
+        <div class="fc">
+          {featuredCollections.map((c, i) => (
+            <div class={`fc-item fc-${i}`}>
+              <CollectionCard collection={c} images={collectionImages} eager={i === 0} />
+            </div>
+          ))}
+          <a class="fc-all" href="/collections">
+            <span>All five collections</span>
+            <span class="chev" aria-hidden="true">&rsaquo;</span>
+          </a>
+        </div>
+      </Section>
+
+      <!-- FEATURED RUGS -->
+      <Section eyebrow="Selected pieces" title="From the house" align="start">
+        <div class="fr">
+          {featuredRugs.map((p) => <ProductCard product={p} />)}
+        </div>
+        <p class="fr-more"><a href="/collections">View the full catalogue &rsaquo;</a></p>
+      </Section>
+
+      <!-- CRAFTSMANSHIP -->
+      <Section class="craft" align="start">
+        <div class="craft-grid">
+          <div class="craft-img">
+            <Picture src={scene.weaverStill} alt="A weaver at the loom, working a Persian rug by hand"
+                     widths={[420, 840]} sizes="(max-width:900px) 92vw, 42vw"
+                     formats={['avif']} fallbackFormat="webp" quality={66} loading="lazy" />
+          </div>
+          <div class="craft-text">
+            <p class="eyebrow" data-uppercase>The craft</p>
+            <h2>One knot at a time</h2>
+            <p>
+              A hand-knotted rug is tied knot by knot around a dressed warp.
+              A large piece at high density can hold more than a million knots
+              and take a weaver over a year.
+            </p>
+            <p>
+              Natural dyes shift between batches and settle unevenly over
+              decades. That unevenness is a record of the piece, not a fault
+              in it.
+            </p>
+            <GhostButton href="/workshop">Inside the workshop</GhostButton>
+          </div>
+        </div>
+      </Section>
+
+      <!-- IMMERSIVE VISUAL -->
+      <section class="immersive">
+        <AtelierScene variant="hero" class="im-scene" />
+        <div class="im-text">
+          <p class="eyebrow" data-uppercase>The atelier</p>
+          <h2>Woven, not manufactured</h2>
+          <GhostButton href="/gallery">Enter the gallery</GhostButton>
+        </div>
+      </section>
+
+      <!-- TRUST -->
+      <Section class="trust" align="center" tight>
+        <ul class="tr" role="list">
+          {trust.map((t) => (
+            <li>
+              <Ornament variant="lozenge" size="1.6rem" class="tr-mark" />
+              <h3 data-uppercase>{t.heading}</h3>
+              <p>{t.body}</p>
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <!-- BESPOKE -->
+      <Section class="bespoke" align="center">
+        <p class="eyebrow" data-uppercase>Bespoke</p>
+        <h2>Commission a piece</h2>
+        <p class="bl">
+          Dimensions, palette, density and material are set with the atelier
+          before the loom is dressed. Begin with a room and a size — the rest
+          can be decided together.
+        </p>
+        <GhostButton href="/custom">Begin a commission</GhostButton>
+      </Section>
+
+      <!-- ATELIER / ABOUT + CONTACT -->
+      <Section class="pair" align="start" tight>
+        <div class="pair-grid">
+          <article class="pcard-e">
+            <p class="eyebrow" data-uppercase>The house</p>
+            <h2>Berlin · Tehran · Budapest</h2>
+            <p>Between two traditions: Persian weaving, and the European rooms these pieces are chosen for.</p>
+            <a href="/about">About MiLAEDiA &rsaquo;</a>
+          </article>
+          <article class="pcard-e">
+            <p class="eyebrow" data-uppercase>Enquiries</p>
+            <h2>Viewings by appointment</h2>
+            <p>For acquisitions, commissions, valuations or a private viewing.</p>
+            <a href="/contact">Contact the atelier &rsaquo;</a>
+          </article>
+        </div>
+      </Section>
     </main>
+
+    <SiteFooter />
   </div>
+  <script type="application/ld+json" set:html={JSON.stringify(ORG)} />
 </Base>
 
 <style>
   .shell { position: relative; }
+
+  /* --- statement --- */
+  .statement :global(.st-mark) { color: var(--gold); }
+  .statement { display: grid; justify-items: center; text-align: center; gap: 1.6rem; }
+  .st-text {
+    margin: 0; max-inline-size: 48ch;
+    font-family: var(--font-display); font-weight: 300;
+    font-size: clamp(1.25rem, 2.6vw, 2.1rem); line-height: 1.6;
+    color: #EDE7DA; text-wrap: balance;
+  }
+  .statement :global(.st-divider) { inline-size: min(300px, 60%); }
+  .st-cities {
+    margin: 0; font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities); text-transform: uppercase; color: var(--gold);
+  }
+
+  /* --- featured collections: deliberately unequal --- */
+  .fc { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: clamp(1rem, 2.5vw, 2rem); align-items: end; }
+  .fc-1 { padding-block-end: clamp(1rem, 4vh, 3rem); }
+  .fc-2 { padding-block-end: clamp(2rem, 8vh, 6rem); }
+  .fc-all {
+    grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline;
+    gap: 1rem; margin-block-start: 1.5rem; padding-block: 1.2rem;
+    border-block-start: 1px solid var(--hairline-soft);
+    font-family: var(--font-display); font-size: clamp(1rem, 1.8vw, 1.35rem);
+    color: var(--silver-hi); text-decoration: none;
+  }
+  .fc-all:hover, .fc-all:focus-visible { color: var(--gold-hi); }
+  .fc-all .chev { color: var(--gold); }
+
+  /* --- featured rugs --- */
+  .fr { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1.2rem, 3vw, 2.6rem); }
+  .fr-more { margin: 2.5rem 0 0; font-family: var(--font-display); font-size: var(--type-card-link); }
+  .fr-more a { color: var(--gold); text-decoration: none; letter-spacing: 0.04em; }
+  .fr-more a:hover { color: var(--gold-hi); }
+
+  /* --- craftsmanship --- */
+  .craft-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(1.5rem, 5vw, 4.5rem); align-items: center; }
+  .craft-img { border: 1px solid var(--hairline); border-radius: var(--radius);
+    overflow: hidden; aspect-ratio: 4/5; }
+  .craft-img :global(img) { inline-size: 100%; block-size: 100%; object-fit: cover; }
+  .craft-text { display: grid; gap: 1.1rem; justify-items: start; }
+  .craft-text h2, .bespoke h2, .im-text h2, .pcard-e h2 {
+    margin: 0; font-family: var(--font-display); font-weight: 300;
+    font-size: clamp(1.7rem, 3.8vw, 3rem); line-height: 1.1; color: #EDE7DA;
+  }
+  .craft-text p, .bl, .pcard-e p {
+    margin: 0; font-family: var(--font-display); font-size: 1.05rem;
+    line-height: 1.95; color: var(--silver); max-inline-size: 46ch;
+  }
+  .eyebrow { margin: 0; font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities); text-transform: uppercase; color: var(--bronze); }
+
+  /* --- immersive --- */
+  .immersive { position: relative; margin-block: clamp(2rem, 6vh, 5rem);
+    border: 1px solid var(--hairline); border-radius: var(--radius); overflow: hidden;
+    min-block-size: clamp(360px, 62vh, 640px); display: grid; }
+  .immersive :global(.im-scene) { position: absolute; inset: 0; }
+  .im-text { position: relative; z-index: 1; align-self: end; justify-self: start;
+    display: grid; gap: 1.1rem; justify-items: start;
+    padding: clamp(1.5rem, 5vw, 4rem); max-inline-size: 40ch; }
+
+  /* --- trust --- */
+  .tr { list-style: none; margin: 0; padding: 0; display: grid;
+    grid-template-columns: repeat(4, 1fr); gap: clamp(1.5rem, 4vw, 3rem); }
+  .tr li { display: grid; justify-items: center; text-align: center; gap: .8rem; }
+  .tr :global(.tr-mark) { color: var(--gold); }
+  .tr h3 { margin: 0; font-family: var(--font-display); font-weight: 400;
+    font-size: var(--type-trust-heading); letter-spacing: var(--track-nav);
+    text-transform: uppercase; color: var(--silver-hi); }
+  .tr p { margin: 0; font-family: var(--font-display); font-size: var(--type-card-link);
+    line-height: 1.85; color: var(--silver); opacity: .75; white-space: pre-line; }
+
+  /* --- bespoke --- */
+  .bespoke { display: grid; justify-items: center; text-align: center; gap: 1.3rem; }
+  .bl { max-inline-size: 48ch; }
+
+  /* --- pair --- */
+  .pair-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.5rem, 4vw, 3.5rem); }
+  .pcard-e { display: grid; gap: .9rem; justify-items: start;
+    padding: clamp(1.4rem, 3vw, 2.4rem); border: 1px solid var(--hairline);
+    border-radius: var(--radius); background: var(--panel); }
+  .pcard-e a { font-family: var(--font-display); font-size: var(--type-card-link);
+    color: var(--gold); text-decoration: none; letter-spacing: .04em; }
+  .pcard-e a:hover { color: var(--gold-hi); }
+
+  @media (max-width: 900px) {
+    .fc { grid-template-columns: 1fr 1fr; }
+    .fc-1, .fc-2 { padding-block-end: 0; }
+    .fr { grid-template-columns: repeat(2, 1fr); }
+    .craft-grid, .pair-grid { grid-template-columns: 1fr; }
+    .craft-img { aspect-ratio: 3/2; }
+    .tr { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 640px) {
+    .fc, .fr { grid-template-columns: 1fr; }
+    .tr { grid-template-columns: 1fr; }
+    .immersive { min-block-size: 78svh; }
+  }
 </style>

@@ -1,0 +1,64 @@
+---
+import Base from "../layouts/Base.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import Divider from "../components/primitives/Divider.astro";
+import GhostButton from "../components/primitives/GhostButton.astro";
+import { Picture } from "astro:assets";
+import { scene } from "../lib/images";
+---
+<Base title="Contact — MiLAEDiA" description="For acquisitions, commissions, valuations or viewings.">
+  <SiteHeader current="/contact" />
+  <main id="main" class="frame ed">
+    <header class="ehead">
+      <div class="etext">
+        <p class="eyebrow" data-uppercase>Enquiries</p>
+        <h1>Contact</h1>
+        <p class="lede">For acquisitions, commissions, valuations or viewings.</p>
+        <Divider class="e-divider" />
+      </div>
+      <div class="eimg">
+        <Picture src={scene.rugDetail} alt="" widths={[420, 840]} sizes="44vw"
+                 formats={["avif"]} fallbackFormat="webp" quality={66} loading="eager" />
+      </div>
+    </header>
+
+    <div class="chunks">
+      <section class="chunk"><h2>Acquisitions and viewings</h2><p>Viewings are by appointment. Tell us which pieces interest you and where you are; we will arrange a time.</p></section>
+      <section class="chunk"><h2>Commissions</h2><p>Bespoke work begins with dimensions and a room. The bespoke enquiry form is the fastest route.</p></section>
+      <section class="chunk"><h2>Company details</h2><p>PLACEHOLDER — the registered company name, address, contact details and registration numbers are pending. See /legal/impressum.</p></section>
+    </div>
+
+    <div class="cta">
+      <GhostButton href="/custom">
+        Begin a commission
+      </GhostButton>
+    </div>
+  </main>
+  <SiteFooter />
+</Base>
+
+<style>
+  .ehead { display:grid; grid-template-columns: minmax(0,1fr) minmax(0,.85fr);
+    gap: clamp(1.5rem,5vw,4rem); align-items:center;
+    padding-block: clamp(90px,14vh,170px) clamp(2rem,6vh,4rem); }
+  .etext { display:grid; gap:1.1rem; justify-items:start; }
+  .eyebrow { margin:0; font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities); text-transform:uppercase; color: var(--bronze); }
+  h1 { margin:0; font-family: var(--font-display); font-weight:300;
+    font-size: clamp(2.6rem,7vw,5.4rem); line-height:1; color:#EDE7DA; }
+  .lede { margin:0; font-family: var(--font-display); font-size: clamp(1.05rem,1.6vw,1.3rem);
+    line-height:1.9; color: var(--silver); max-inline-size:44ch; }
+  .etext :global(.e-divider) { inline-size: min(320px,70%); }
+  .eimg { border:1px solid var(--hairline); border-radius: var(--radius); overflow:hidden; aspect-ratio:4/5; }
+  .eimg :global(img) { inline-size:100%; block-size:100%; object-fit:cover; }
+
+  .chunks { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
+    gap: clamp(2rem,5vw,4rem); padding-block: clamp(1rem,4vh,3rem); }
+  .chunk h2 { margin:0 0 .7em; font-family: var(--font-display); font-weight:400;
+    font-size: clamp(1.15rem,2vw,1.5rem); color:#EDE7DA; }
+  .chunk p { margin:0; font-family: var(--font-display); font-size:1rem;
+    line-height:1.95; color: var(--silver); }
+  .cta { padding-block: clamp(2rem,6vh,4rem) clamp(4rem,10vh,7rem); }
+  @media (max-width: 900px) { .ehead { grid-template-columns:1fr; } .eimg { aspect-ratio:3/2; } }
+</style>

@@ -1,0 +1,173 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import GhostButton from '../components/primitives/GhostButton.astro';
+import Divider from '../components/primitives/Divider.astro';
+---
+<Base title="Checkout — MiLAEDiA" description="Complete your acquisition.">
+  <SiteHeader />
+  <main id="main" class="frame">
+    <header class="chd">
+      <h1>Checkout</h1>
+      <Divider class="chd-divider" />
+    </header>
+
+    <form class="co" data-checkout novalidate>
+      <div class="fields">
+        <fieldset>
+          <legend data-uppercase>Contact</legend>
+          <label><span>Full name</span><input name="name" autocomplete="name" required></label>
+          <label><span>Email</span><input name="email" type="email" autocomplete="email" required></label>
+        </fieldset>
+
+        <fieldset>
+          <legend data-uppercase>Delivery</legend>
+          <label><span>Address</span><input name="address1" autocomplete="address-line1" required></label>
+          <label><span>Address line 2</span><input name="address2" autocomplete="address-line2"></label>
+          <div class="pair">
+            <label><span>Postcode</span><input name="postcode" autocomplete="postal-code" required></label>
+            <label><span>City</span><input name="city" autocomplete="address-level2" required></label>
+          </div>
+          <label><span>Country</span>
+            <select name="country" autocomplete="country-name" required>
+              <option value="DE">Germany</option><option value="AT">Austria</option>
+              <option value="CH">Switzerland</option><option value="HU">Hungary</option>
+              <option value="other">Elsewhere</option>
+            </select>
+          </label>
+          <label><span>Notes for the atelier</span><textarea name="notes" rows="3"></textarea></label>
+        </fieldset>
+      </div>
+
+      <aside class="sum panel">
+        <h2 data-uppercase>Order</h2>
+        <ul class="colines" data-co-lines role="list"></ul>
+        <dl>
+          <dt>Subtotal</dt><dd data-co-sub>—</dd>
+          <dt>Shipping</dt><dd>Quoted after checkout</dd>
+          <dt class="grand">Total</dt><dd class="grand" data-co-total>—</dd>
+        </dl>
+        <GhostButton type="submit" class="pay">Complete acquisition</GhostButton>
+        <p class="note" data-co-note hidden></p>
+        <p class="vat">Insured, crated freight. Shipping is quoted per destination once the order is placed.</p>
+      </aside>
+    </form>
+  </main>
+  <SiteFooter />
+</Base>
+
+<style>
+  .chd { padding-block: clamp(90px,14vh,170px) clamp(1.5rem,4vh,3rem); display:grid; gap:1rem; }
+  .chd h1 { margin:0; font-family: var(--font-display); font-weight:300;
+    font-size: clamp(2.4rem,6vw,4.6rem); line-height:1; color:#EDE7DA; }
+  .chd :global(.chd-divider) { inline-size: min(340px,60%); }
+
+  .co { display:grid; grid-template-columns: minmax(0,1.4fr) minmax(0,1fr);
+    gap: clamp(1.5rem,4vw,3.5rem); align-items:start; padding-block-end: clamp(3rem,8vh,6rem); }
+  .fields { display:grid; gap:2.2rem; }
+  fieldset { border:0; margin:0; padding:0; display:grid; gap:1rem; }
+  legend { padding:0 0 .4rem; font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities); text-transform: uppercase; color: var(--bronze); }
+  label { display:grid; gap:.45em; }
+  label > span { font-family: var(--font-display); font-size: var(--type-card-link); color: var(--silver); }
+  input, select, textarea {
+    background: var(--panel); color: var(--silver-hi);
+    border:1px solid var(--hairline); border-radius: 5px; padding:.75em .9em;
+    font-family: var(--font-display); font-size: 1rem; inline-size:100%;
+  }
+  input:focus-visible, select:focus-visible, textarea:focus-visible { border-color: var(--gold); }
+  input[aria-invalid='true'] { border-color: var(--crimson); }
+  .pair { display:grid; grid-template-columns: 1fr 2fr; gap:1rem; }
+
+  .sum { padding: clamp(1.2rem,3vw,2rem); display:grid; gap:1rem;
+    position:sticky; top: clamp(72px,10vh,110px); }
+  .sum h2 { margin:0; font-family: var(--font-display); font-weight:400;
+    font-size: var(--type-descriptor); letter-spacing: var(--track-cities); color: var(--bronze); }
+  .colines { list-style:none; margin:0; padding:0; display:grid; gap:.7em;
+    font-family: var(--font-display); font-size: var(--type-card-link); }
+  .colines li { display:flex; justify-content:space-between; gap:1rem; color: var(--silver); }
+  .sum dl { display:grid; grid-template-columns:1fr auto; gap:.6em 1rem; margin:0;
+    padding-block-start:.8em; border-block-start:1px solid var(--hairline-soft);
+    font-family: var(--font-display); font-size: var(--type-card-link); }
+  .sum dt { color: var(--silver); } .sum dd { margin:0; color: var(--silver-hi); font-variant-numeric: tabular-nums; }
+  .sum .grand { color: var(--gold-hi); font-size:1.1em; }
+  .note { margin:0; font-family: var(--font-display); font-size: var(--type-card-link);
+    line-height:1.7; color: var(--gold); }
+  .note[data-kind='error'] { color: #C98A6A; }
+  .vat { margin:0; font-family: var(--font-display); font-size: var(--type-descriptor);
+    color: var(--silver); opacity:.55; line-height:1.7; }
+  @media (max-width: 900px) { .co { grid-template-columns:1fr; } .sum { position:static; } }
+</style>
+
+<script>
+  import { getBag, subtotal, clearBag } from '../lib/bag';
+  import { createPaymentSession, PaymentNotConfigured, draftReference } from '../lib/payment';
+
+  const fmt = (m: number) =>
+    new Intl.NumberFormat('en-DE', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(m/100);
+
+  const lines = getBag();
+  const list = document.querySelector<HTMLElement>('[data-co-lines]')!;
+  list.innerHTML = lines.length
+    ? lines.map(l => `<li><span>${l.title} × ${l.qty}</span><span>${fmt(l.priceMinor*l.qty)}</span></li>`).join('')
+    : '<li><span>Your bag is empty.</span></li>';
+  const sub = subtotal(lines);
+  document.querySelector('[data-co-sub]')!.textContent = fmt(sub);
+  document.querySelector('[data-co-total]')!.textContent = fmt(sub);
+
+  const form = document.querySelector<HTMLFormElement>('[data-checkout]')!;
+  const note = document.querySelector<HTMLElement>('[data-co-note]')!;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    note.hidden = true;
+
+    // Validation, surfaced accessibly rather than via the UA bubble.
+    let firstBad: HTMLElement | null = null;
+    for (const el of form.querySelectorAll<HTMLInputElement>('[required]')) {
+      const bad = !el.value.trim() || (el.type === 'email' && !/.+@.+\..+/.test(el.value));
+      el.setAttribute('aria-invalid', String(bad));
+      if (bad && !firstBad) firstBad = el;
+    }
+    if (firstBad) {
+      note.dataset.kind = 'error';
+      note.textContent = 'Please complete the highlighted fields.';
+      note.hidden = false;
+      firstBad.focus();
+      return;
+    }
+    if (!lines.length) {
+      note.dataset.kind = 'error';
+      note.textContent = 'Your bag is empty.';
+      note.hidden = false;
+      return;
+    }
+
+    const fd = new FormData(form);
+    const contact = Object.fromEntries(fd.entries()) as any;
+
+    try {
+      const session = await createPaymentSession(lines, contact, 'EUR');
+      window.location.href = session.url;
+    } catch (err) {
+      if (err instanceof PaymentNotConfigured) {
+        // HONEST STATE. No payment is claimed. The order is recorded as a
+        // draft enquiry and the atelier follows up — this is the isolated
+        // integration point, not a fake success.
+        const ref = draftReference();
+        try {
+          sessionStorage.setItem('milaedia:last-order', JSON.stringify({
+            ref, lines, contact, subtotal: sub, placedAt: new Date().toISOString(),
+          }));
+        } catch {}
+        clearBag();
+        window.location.href = `/order?ref=${encodeURIComponent(ref)}`;
+        return;
+      }
+      note.dataset.kind = 'error';
+      note.textContent = 'Something went wrong. Please try again.';
+      note.hidden = false;
+    }
+  });
+</script>

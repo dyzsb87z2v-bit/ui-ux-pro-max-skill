@@ -1,0 +1,159 @@
+---
+import Base from '../../../layouts/Base.astro';
+import SiteHeader from '../../../components/SiteHeader.astro';
+import SiteFooter from '../../../components/SiteFooter.astro';
+import ProductCard from '../../../components/ProductCard.astro';
+import Divider from '../../../components/primitives/Divider.astro';
+import { Picture } from 'astro:assets';
+import { collections } from '../../../data/site';
+import { byCollection, collectionCopy } from '../../../data/catalogue';
+import { collectionImages } from '../../../lib/images';
+
+export function getStaticPaths() {
+  return collections.map((c) => ({ params: { collection: c.slug }, props: { collection: c } }));
+}
+const { collection: c } = Astro.props;
+const items = byCollection(c.slug);
+const hero = collectionImages[c.slug];
+---
+<Base title={`${c.title} — MiLAEDiA`} description={collectionCopy[c.slug]}>
+  <SiteHeader current="/collections" />
+  <main id="main" class="frame">
+    <header class="chead">
+      <div class="ctext">
+        <p class="eyebrow" data-uppercase>Collection</p>
+        <h1 class="ctitle">{c.title}</h1>
+        <p class="cdesc">{collectionCopy[c.slug]}</p>
+        <Divider class="chead-divider" />
+        <p class="count">{items.length} {items.length === 1 ? 'piece' : 'pieces'}</p>
+      </div>
+      <div class="cart-img">
+        <Picture src={hero} alt="" widths={[420, 840]} sizes="42vw"
+                 formats={['avif']} fallbackFormat="webp" quality={66} loading="eager" />
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <label class="sort">
+        <span data-uppercase>Sort</span>
+        <select data-sort>
+          <option value="default">Curated</option>
+          <option value="price-asc">Price, ascending</option>
+          <option value="price-desc">Price, descending</option>
+          <option value="size-desc">Size, largest first</option>
+        </select>
+      </label>
+      <fieldset class="filter">
+        <legend class="visually-hidden">Filter by availability</legend>
+        <button type="button" data-filter="all" aria-pressed="true" data-uppercase>All</button>
+        <button type="button" data-filter="available" aria-pressed="false" data-uppercase>Available</button>
+        <button type="button" data-filter="one_of_one" aria-pressed="false" data-uppercase>Unique</button>
+      </fieldset>
+    </div>
+
+    <div class="grid" data-grid>
+      {items.map((p, i) => (
+        <div data-item
+             data-price={p.priceMinor}
+             data-size={p.dimensionsCm[0] * p.dimensionsCm[1]}
+             data-mode={p.inventoryMode}
+             data-sold={p.soldAt ? '1' : '0'}>
+          <ProductCard product={p} eager={i < 3} />
+        </div>
+      ))}
+    </div>
+    <p class="empty" data-empty hidden>No pieces match this filter.</p>
+  </main>
+  <SiteFooter />
+</Base>
+
+<style>
+  .chead {
+    display: grid; grid-template-columns: minmax(0,1fr) minmax(0,.85fr);
+    gap: clamp(1.5rem,5vw,4rem); align-items: center;
+    padding-block: clamp(90px,14vh,170px) clamp(2rem,5vh,3.5rem);
+  }
+  .ctext { display: grid; gap: 1rem; justify-items: start; }
+  .eyebrow { margin:0; font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities); text-transform: uppercase; color: var(--bronze); }
+  .ctitle { margin:0; font-family: var(--font-display); font-weight:300;
+    font-size: clamp(2.4rem,6vw,5rem); line-height:1.02; color:#EDE7DA; text-wrap: balance; }
+  .cdesc { margin:0; font-family: var(--font-display); font-size: clamp(1rem,1.5vw,1.2rem);
+    line-height:1.9; color: var(--silver); max-inline-size: 46ch; }
+  .ctext :global(.chead-divider) { inline-size: min(300px,70%); }
+  .count { margin:0; font-family: var(--font-display); font-size: var(--type-card-link);
+    letter-spacing: var(--track-nav); text-transform: uppercase; color: var(--gold); }
+  .cart-img { border: var(--border) solid var(--hairline); border-radius: var(--radius);
+    overflow:hidden; aspect-ratio: 5/4; }
+  .cart-img :global(img) { inline-size:100%; block-size:100%; object-fit:cover; }
+
+  .toolbar { display:flex; justify-content:space-between; align-items:center; gap:1.5rem;
+    flex-wrap:wrap; padding-block: 1.2rem; border-block: 1px solid var(--hairline-soft); }
+  .sort { display:flex; gap:.8em; align-items:center; font-family: var(--font-display);
+    font-size: var(--type-card-link); letter-spacing: var(--track-nav); color: var(--bronze); }
+  .sort select {
+    background: var(--panel); color: var(--silver-hi); border: var(--border) solid var(--hairline);
+    border-radius: 5px; padding: .5em .8em; font-family: var(--font-display);
+    font-size: var(--type-card-link);
+  }
+  .filter { display:flex; gap:.5rem; border:0; margin:0; padding:0; }
+  .filter button {
+    background:none; border: var(--border) solid var(--hairline); border-radius:5px;
+    color: var(--silver); font-family: var(--font-display); font-size: var(--type-card-link);
+    letter-spacing: var(--track-nav); text-transform: uppercase; padding:.5em 1em; cursor:pointer;
+  }
+  .filter button[aria-pressed='true'] { color: var(--gold-hi); border-color: var(--gold); }
+
+  .grid { display:grid; grid-template-columns: repeat(3,1fr); gap: clamp(1.2rem,3vw,2.6rem);
+    padding-block: clamp(2rem,5vh,4rem); }
+  .empty { text-align:center; font-family: var(--font-display); color: var(--silver);
+    opacity:.6; padding-block: 4rem; }
+
+  @media (max-width: 900px) { .chead { grid-template-columns:1fr; } .grid { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 640px) { .grid { grid-template-columns:1fr; } }
+</style>
+
+<script>
+  const grid = document.querySelector<HTMLElement>('[data-grid]');
+  const empty = document.querySelector<HTMLElement>('[data-empty]');
+  if (grid && empty) {
+    const items = Array.from(grid.querySelectorAll<HTMLElement>('[data-item]'));
+    const original = items.slice();
+    let filter = 'all';
+
+    const apply = () => {
+      let shown = 0;
+      for (const el of items) {
+        const mode = el.dataset.mode;
+        const sold = el.dataset.sold === '1';
+        const ok =
+          filter === 'all' ? true :
+          filter === 'available' ? !sold && mode !== 'made_to_order' :
+          mode === 'one_of_one';
+        el.hidden = !ok;
+        if (ok) shown++;
+      }
+      empty.hidden = shown > 0;
+    };
+
+    document.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach((b) => {
+      b.addEventListener('click', () => {
+        filter = b.dataset.filter!;
+        document.querySelectorAll('[data-filter]').forEach((o) =>
+          o.setAttribute('aria-pressed', String(o === b)));
+        apply();
+      });
+    });
+
+    document.querySelector<HTMLSelectElement>('[data-sort]')?.addEventListener('change', (e) => {
+      const v = (e.target as HTMLSelectElement).value;
+      const n = (el: HTMLElement, k: string) => Number(el.dataset[k] || 0);
+      const sorted =
+        v === 'price-asc'  ? [...items].sort((a, b) => n(a,'price') - n(b,'price')) :
+        v === 'price-desc' ? [...items].sort((a, b) => n(b,'price') - n(a,'price')) :
+        v === 'size-desc'  ? [...items].sort((a, b) => n(b,'size')  - n(a,'size'))  :
+        original;
+      sorted.forEach((el) => grid.appendChild(el));
+    });
+  }
+</script>

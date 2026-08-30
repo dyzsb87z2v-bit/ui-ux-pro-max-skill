@@ -1,0 +1,45 @@
+---
+import Base from "../../layouts/Base.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import Divider from "../../components/primitives/Divider.astro";
+---
+<Base title="Impressum — MiLAEDiA" description="Angaben gemäß § 5 TMG">
+  <SiteHeader />
+  <main id="main" class="frame legal">
+    <header class="lhead">
+      <p class="eyebrow" data-uppercase>Angaben gemäß § 5 TMG</p>
+      <h1>Impressum</h1>
+      <Divider class="l-divider" />
+    </header>
+    <p class="warn">An Impressum is legally required before this site goes live in Germany. Every field above must be completed with verified company information.</p>
+    <div class="lbody">
+      <section class="lrow"><h2>Diensteanbieter</h2><p>PLACEHOLDER — registered company name, legal form, street, postcode and city.</p></section>
+      <section class="lrow"><h2>Vertreten durch</h2><p>PLACEHOLDER — name of the managing director or authorised representative.</p></section>
+      <section class="lrow"><h2>Kontakt</h2><p>PLACEHOLDER — telephone and email address.</p></section>
+      <section class="lrow"><h2>Registereintrag</h2><p>PLACEHOLDER — register court and commercial register number, if applicable.</p></section>
+      <section class="lrow"><h2>Umsatzsteuer-ID</h2><p>PLACEHOLDER — VAT identification number under § 27a UStG, if applicable.</p></section>
+      <section class="lrow"><h2>Verantwortlich für den Inhalt</h2><p>PLACEHOLDER — name and address of the person responsible under § 18 Abs. 2 MStV.</p></section>
+      <section class="lrow"><h2>EU-Streitschlichtung</h2><p>Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung bereit. Unsere E-Mail-Adresse finden Sie oben.</p></section>
+    </div>
+  </main>
+  <SiteFooter />
+</Base>
+
+<style>
+  .legal { padding-block: clamp(90px,14vh,170px) clamp(4rem,10vh,8rem); max-inline-size: 74ch; }
+  .lhead { display:grid; gap:1rem; margin-block-end:2rem; }
+  .eyebrow { margin:0; font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities); text-transform:uppercase; color: var(--bronze); }
+  h1 { margin:0; font-family: var(--font-display); font-weight:300;
+    font-size: clamp(2.2rem,5.5vw,4rem); line-height:1.05; color:#EDE7DA; }
+  .lhead :global(.l-divider) { inline-size: min(320px,60%); }
+  .warn { margin:0 0 2.5rem; padding:1rem 1.2rem; border:1px solid rgba(160,68,42,.45);
+    border-radius: var(--radius); background:#0D0705; font-family: var(--font-display);
+    font-size: var(--type-card-link); line-height:1.8; color:#C98A6A; }
+  .lbody { display:grid; gap:2rem; }
+  .lrow h2 { margin:0 0 .5em; font-family: var(--font-display); font-weight:400;
+    font-size:1.1rem; color:#EDE7DA; }
+  .lrow p { margin:0; font-family: var(--font-display); font-size:.98rem;
+    line-height:1.9; color: var(--silver); }
+</style>
