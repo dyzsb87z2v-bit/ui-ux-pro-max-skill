@@ -1,0 +1,38 @@
+---
+/**
+ * Ornament — Persian arabesque marks.
+ *
+ * The six reference glyphs were NEVER EXPORTED (spec §26): they exist only
+ * at 42–53px inside a compressed JPEG and must be redrawn as vectors.
+ * These are geometrically-derived interim marks built from the measured
+ * interlaced-lozenge construction, clearly flagged so they are replaced
+ * rather than forgotten.
+ */
+interface Props { variant?: 'lozenge' | 'medallion'; size?: string; class?: string }
+const { variant = 'lozenge', size = '1em', class: cls = '' } = Astro.props;
+---
+<svg
+  class={cls}
+  data-placeholder-asset="ornament"
+  width={size} height={size} viewBox="0 0 48 48"
+  fill="none" stroke="currentColor" stroke-width="1.1"
+  stroke-linecap="round" stroke-linejoin="round"
+  aria-hidden="true" focusable="false"
+>
+  {variant === 'lozenge' ? (
+    <>
+      <path d="M24 4 44 24 24 44 4 24Z" />
+      <path d="M24 12 36 24 24 36 12 24Z" />
+      <path d="M24 17 31 24 24 31 17 24Z" />
+      <path d="M15 15 33 33M33 15 15 33" opacity=".55" />
+    </>
+  ) : (
+    <>
+      <path d="M24 3 41 24 24 45 7 24Z" />
+      <path d="M24 10 34 24 24 38 14 24Z" />
+      <path d="M24 24m-4 0a4 4 0 1 0 8 0a4 4 0 1 0-8 0" />
+      <path d="M24 3v7M24 38v7M7 24h7M34 24h7" opacity=".7" />
+      <path d="M13 13c4 2 6 5 6 8M35 13c-4 2-6 5-6 8M13 35c4-2 6-5 6-8M35 35c-4-2-6-5-6-8" opacity=".5" />
+    </>
+  )}
+</svg>

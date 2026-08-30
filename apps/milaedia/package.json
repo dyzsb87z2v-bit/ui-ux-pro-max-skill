@@ -1,0 +1,21 @@
+{
+  "name": "milaedia",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test": "playwright test",
+    "test:invariants": "playwright test tests/invariants.spec.ts"
+  },
+  "dependencies": {
+    "astro": "^5.18.2",
+    "sharp": "^0.35.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "typescript": "^5.9.3"
+  }
+}

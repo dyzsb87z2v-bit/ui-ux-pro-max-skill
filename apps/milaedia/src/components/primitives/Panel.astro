@@ -1,0 +1,10 @@
+---
+/**
+ * Panel — the system's only surface.
+ * 1px hairline, ~0.79% radius, NO fill difference from the ground,
+ * NO shadow. Panels are defined by their border alone.
+ */
+interface Props { as?: string; class?: string; [key: string]: any }
+const { as: Tag = 'div', class: cls = '', ...rest } = Astro.props;
+---
+<Tag class={`panel ${cls}`} {...rest}><slot /></Tag>

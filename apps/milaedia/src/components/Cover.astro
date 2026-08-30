@@ -1,0 +1,201 @@
+---
+/**
+ * Cover — the measured 2:1 threshold panel.
+ *
+ * Vertical anchoring is transcribed exactly from the reference (% of panel
+ * height, Forensics §07 / Spec §10):
+ *   medallion 12.5–28.5   wordmark 41.5–59.9   tagline 60.1–61.9
+ *   cities    65.9–67.7   CTA      71.9–81.2
+ * The bottom 19% carries NO type — it belongs to the floor and the rug.
+ *
+ * The type sits in the scene's shadow pocket (~18% of peak luminance).
+ * There is NO overlay and NO scrim: legibility comes from placement inside
+ * the scene's own light. Adding a scrim is an admission the composition
+ * does not work, and is the single difference between this and a template.
+ */
+import { Picture } from 'astro:assets';
+/**
+ * INTERIM SCENE PLATE — see PLACEHOLDERS.md
+ *
+ * The delivered hero (01+02 stitched, `scene/hero-reference.png`) has the
+ * wordmark, tagline, cities line and CTA BAKED INTO THE PIXELS. It is the
+ * rendered design, not a scene plate, so it cannot sit behind live text —
+ * the type ghosts against its own baked copy. No text-free 2:1 crop of it
+ * exists; the baked type occupies the centre.
+ *
+ * Until a clean plate is generated, the cover uses the largest verified
+ * TEXT-FREE scene asset in the delivery. Swapping it back is a one-line
+ * import change once `scene/hero-plate.png` exists.
+ */
+import heroCover from '../assets/scene/window-triptych.png';
+import Ornament from './primitives/Ornament.astro';
+import Wordmark from './primitives/Wordmark.astro';
+import GhostButton from './primitives/GhostButton.astro';
+import { brand } from '../data/site';
+---
+<section class="cover panel scene-locked" aria-labelledby="cover-title">
+  <!-- Scene. Direction-locked: the three-zone composition (European left /
+       type centre / Persian right) is a photograph, not a layout. Mirroring
+       it in RTL would put Berlin on the right and invert the brand thesis. -->
+  <div class="scene" aria-hidden="true" data-placeholder-asset="hero-plate">
+    <Picture
+      src={heroCover}
+      alt=""
+      widths={[480, 960]}
+      sizes="100vw"
+      formats={['avif']}
+      fallbackFormat="webp"
+      quality={62}
+      loading="eager"
+      fetchpriority="high"
+    />
+  </div>
+
+  <!-- Chrome + type. Flows with direction. -->
+  <div class="stack scene-text">
+    <Ornament variant="medallion" class="medallion" size="100%" />
+
+    <h1 id="cover-title" class="title">
+      <Wordmark as="span" />
+      <span class="visually-hidden">— {brand.tagline}</span>
+    </h1>
+
+    <p class="tagline" data-type="tagline" data-uppercase>
+      <span class="tagline-run">{brand.tagline}</span>
+      {/* Narrow viewports use the measured three-line descriptor from the nav
+          plate (cap 7px, line pitch 15–16px, leading 2.2x) rather than letting
+          a 44-character sentence wrap raggedly. Both are in the reference. */}
+      <span class="tagline-stack" aria-hidden="true">
+        {brand.descriptor.map((line) => <span>{line}</span>)}
+      </span>
+    </p>
+
+    <p class="cities" data-uppercase>
+      {brand.cities.map((city, i) => (
+        <>
+          {i > 0 && <span class="sep" aria-hidden="true">&#9670;</span>}
+          <span>{city}</span>
+        </>
+      ))}
+    </p>
+
+    <div class="cta">
+      <GhostButton href="/home">Enter the Experience</GhostButton>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Measured: the hero panel is exactly 2:1. */
+  .cover {
+    position: relative;
+    aspect-ratio: 2 / 1;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .scene { position: absolute; inset: 0; z-index: 0; }
+  .scene :global(img) {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    /* Right third holds the weaver and the wall rug; keep it in frame as the
+       viewport narrows. */
+    object-position: 50% 50%;
+  }
+
+  /* No scrim, no overlay. Deliberate. */
+
+  .stack {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    /* Rows reproduce the measured vertical anchoring as fractions of the
+       panel height. Percentages, not pixels, so they survive rescaling. */
+    grid-template-rows:
+      12.5fr    /* top void        0    – 12.5 */
+      16fr      /* medallion      12.5  – 28.5 */
+      13fr      /* void           28.5  – 41.5 */
+      18.4fr    /* wordmark       41.5  – 59.9 */
+      2fr       /* tagline        60.1  – 61.9 */
+      4fr       /* void           61.9  – 65.9 */
+      1.8fr     /* cities         65.9  – 67.7 */
+      4.2fr     /* void           67.7  – 71.9 */
+      9.3fr     /* CTA            71.9  – 81.2 */
+      18.8fr;   /* floor void     81.2  – 100  */
+    justify-items: center;
+    align-items: center;
+    text-align: center;
+    padding-inline: var(--space-class);
+  }
+
+  .medallion { grid-row: 2; color: var(--gold-hi); block-size: 100%; opacity: 0.92; }
+
+  .title { grid-row: 4; margin: 0; align-self: center; line-height: 1; }
+  .title :global(.wordmark) { font-size: var(--type-display); }
+
+  .tagline {
+    grid-row: 5;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--type-tagline);
+    letter-spacing: var(--track-tagline);
+    color: var(--silver-hi);
+    text-transform: uppercase;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  .tagline-stack { display: none; }
+
+  .cities {
+    grid-row: 7;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.85em;
+    font-family: var(--font-display);
+    font-size: var(--type-cities);
+    letter-spacing: var(--track-cities);
+    color: var(--silver-hi);
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .cities .sep { color: var(--gold); font-size: 0.62em; letter-spacing: 0; }
+
+  .cta { grid-row: 9; align-self: center; }
+
+  /* --- narrow viewports -------------------------------------------------
+     §09: the 6.2:1 ratio cannot hold at 375px (8.3% of width = 31px, no
+     longer a hero). The wordmark grows relative to width and the tagline is
+     allowed to wrap. The ABSENCE OF A MIDDLE TIER is preserved even as the
+     ratio compresses — that is what carries the register. */
+  @media (max-width: 640px) {
+    /* A threshold should occupy the whole screen, not sit in a letterbox.
+       svh, not vh — mobile browser chrome must not clip the CTA. */
+    .cover {
+      aspect-ratio: auto;
+      min-block-size: calc(100svh - 2 * var(--page-margin));
+    }
+    .stack {
+      grid-template-rows:
+        7fr 12fr 9fr 17fr 7fr 3fr 3.5fr 4fr 10fr 27fr;
+      padding-inline: var(--space-band);
+    }
+    .title :global(.wordmark) { font-size: clamp(2.6rem, 15vw, 5rem); }
+    .tagline { white-space: normal; }
+    .tagline-run {
+      position: absolute; inline-size: 1px; block-size: 1px;
+      overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    }
+    .tagline-stack {
+      display: grid;
+      gap: 0.55em;
+      letter-spacing: 0.14em;
+      line-height: var(--leading-descriptor);
+    }
+    .cities { gap: 0.55em; letter-spacing: 0.16em; }
+    /* Weaver and wall rug live in the right third; hold them in frame. */
+    .scene :global(img) { object-position: 62% 50%; }
+  }
+</style>

@@ -1,0 +1,10 @@
+---
+import Base from '../layouts/Base.astro';
+import Cover from '../components/Cover.astro';
+import { brand } from '../data/site';
+---
+<Base title={`${brand.wordmark} — ${brand.tagline}`}>
+  <main id="main" class="frame">
+    <Cover />
+  </main>
+</Base>

@@ -1,0 +1,49 @@
+---
+import '../styles/tokens.css';
+import '../styles/base.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Locale is threaded from day one even with one locale. (§09b rule 1) */
+  locale?: string;
+  dir?: 'ltr' | 'rtl';
+}
+
+const {
+  title,
+  description = 'MiLAEDiA — Persian Heritage. European Vision. Worldwide. A luxury Persian rug house and art gallery.',
+  locale = 'en',
+  dir = 'ltr',
+} = Astro.props;
+---
+<!doctype html>
+<html lang={locale} dir={dir}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    {/* Two families is the ceiling — the reference uses exactly two.
+        Cormorant Garamond is the identified display face (splayed M with
+        pointed apex, pointed A, very high contrast, fine flared serifs).
+        Playfair does not match. */}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&display=swap"
+    />
+
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content={locale} />
+    <meta property="og:type" content="website" />
+    {/* hreflang is reciprocal once a second locale exists. (§09b rule 6) */}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <slot />
+  </body>
+</html>

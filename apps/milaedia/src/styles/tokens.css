@@ -1,0 +1,151 @@
+/* ============================================================
+   MiLAEDiA — design tokens
+   Every value here is MEASURED from the reference composite
+   (1143x1017) or the 2x asset crops. See docs/milaedia/MEASUREMENTS.md.
+   Do not substitute values. Do not add hues outside the measured range.
+   ============================================================ */
+
+:root {
+  /* ---- colour: ground -------------------------------------
+     Measured: page ground is pure black; panels are a warm
+     near-black that differs from the ground by luminance only.
+     Panels are defined by their hairline, never by a fill. */
+  --ground:        #000000;
+  --panel:         #0A0806;
+  --raised:        #120F0A;
+  --active-fill:   #332C21;   /* admin rail active pill */
+
+  /* ---- colour: hairline -----------------------------------
+     1px, universal. Never 2px — it doubles the visual weight
+     of the entire interface. */
+  --hairline:      #4F4840;
+  --hairline-soft: rgba(79, 72, 64, 0.55);
+
+  /* ---- colour: gold ramp = brand + interactive ------------ */
+  --bronze:        #8D5E37;
+  --gold-scene:    #A97342;
+  --gold:          #B2A589;
+  --gold-hi:       #E7CA9C;
+
+  /* ---- colour: silver ramp = neutral + label -------------- */
+  --silver:        #A4A4A4;
+  --silver-hi:     #E0E0E0;
+
+  /* ---- colour: accents ------------------------------------
+     crimson comes from the rugs themselves.
+     twilight is the ONLY cool hue in the system — 0.5% of
+     saturated pixels — and is the sole visual evidence of
+     "European Vision". Never remove, never add a second. */
+  --crimson:       #7B311D;
+  --twilight:      #344E7D;
+
+  /* ---- wordmark metallic gradient, cap-top -> baseline ---- */
+  --wordmark-grad: linear-gradient(178deg, #E7CA9C 0%, #CEAC7E 46%, #A4855D 100%);
+
+  /* ---- twilight sky, nine measured stops ------------------
+     Reducing this to a two-stop blue->orange destroys it. */
+  --sky: linear-gradient(180deg,
+    #292B39 0%,  #344E7D 12%, #555780 25%, #706181 37%,
+    #916F83 50%, #BB8C83 68%, #C6856B 80%, #8E4F39 91%, #7E3D24 100%);
+
+  /* ============================================================
+     SPACING — measured as % of the 1143px canvas, expressed
+     fluidly so ratios survive rescaling.
+     Gutters are SEMANTIC, not uniform:
+       intra    0.66%  items inside one group
+       adjacent 1.00%  neighbouring groups
+       band     1.40%  horizontal bands
+       class    2.10%  different content classes
+     ============================================================ */
+  --space-intra:    clamp(6px,  0.66vw, 12px);
+  --space-adjacent: clamp(9px,  1.00vw, 18px);
+  --space-band:     clamp(12px, 1.40vw, 26px);
+  --space-class:    clamp(18px, 2.10vw, 38px);
+
+  /* Page margin. Measured at 0.9% of canvas width on desktop.
+     §09: below 640px this must grow to ~4.5% — a deliberate,
+     recorded inversion of the compressed-outside rhythm. */
+  --page-margin: clamp(10px, 0.9vw, 17px);
+
+  /* ---- geometry ------------------------------------------- */
+  --radius:       clamp(8px, 0.79vw, 14px);
+  --radius-card:  clamp(6px, 0.61vw, 11px);
+  --radius-pill:  4px;
+  --border:       1px;
+
+  /* ============================================================
+     TYPE — measured cap-heights on the 1143 canvas, converted
+     to font-size using Cormorant's ~0.70 cap ratio.
+     Display-to-support ratio is 6.2:1 with NO intermediate
+     level. The gap is the luxury. Do not fill it.
+     ============================================================ */
+  --font-display: 'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif;
+  --font-ui:      'Poppins', 'Montserrat', ui-sans-serif, system-ui, sans-serif; /* ADMIN ONLY */
+  --font-body:    var(--font-display); /* placeholder — no body-copy sample exists
+                                          in any reference. Single token swap. */
+
+  /* hero display: 8.3% of hero width */
+  --type-display:       clamp(2.4rem, 8.3vw, 10rem);
+  --type-plate:         clamp(1.05rem, 1.62vw, 1.65rem);
+  --type-nav-active:    clamp(0.86rem, 1.31vw, 1.28rem);
+  --type-card-title:    clamp(0.78rem, 1.14vw, 1.1rem);
+  --type-cities:        clamp(0.72rem, 1.09vw, 1.05rem);
+  --type-nav-idle:      clamp(0.7rem,  1.05vw, 1.0rem);
+  --type-tagline:       clamp(0.68rem, 1.01vw, 0.97rem);
+  --type-trust-heading: clamp(0.66rem, 0.96vw, 0.92rem);
+  --type-card-link:     clamp(0.62rem, 0.88vw, 0.84rem);
+  --type-descriptor:    clamp(0.6rem,  0.83vw, 0.8rem);
+
+  /* Tracking. Measured rule: the smaller and shorter the text,
+     the wider the tracking. The wordmark alone sits near normal. */
+  --track-display:   0.005em;
+  --track-cities:    0.27em;
+  --track-tagline:   0.18em;
+  --track-cta:       0.18em;
+  --track-nav:       0.12em;
+  --track-card:      0.06em;
+
+  /* Descriptor leading measured at 2.2x cap height. */
+  --leading-descriptor: 2.2;
+  --leading-tight: 1.25;
+  --leading-body: 1.7;
+
+  /* ---- component rhythm, measured --------------------------*/
+  --nav-item-pitch:   clamp(24px, 2.6vw, 34px);  /* public nav: 30px @1143 */
+  --admin-item-pitch: clamp(22px, 2.2vw, 28px);  /* admin rail: 25px @1143 */
+
+  /* ---- motion ---------------------------------------------
+     Envelope measured from the intro's encoded frame sizes:
+     hold -> ease-in -> plateau -> ease-out -> settle. */
+  --ease-cinematic: cubic-bezier(0.33, 0, 0.15, 1);
+  --dur-hold:    500ms;
+  --dur-in:     1500ms;
+  --dur-plateau:4500ms;
+  --dur-out:    2000ms;
+}
+
+/* ---- mobile: the one recorded deviation from the measured
+   spacing rhythm. Page margin grows from 0.9% to ~4.5%. ---- */
+@media (max-width: 640px) {
+  :root { --page-margin: 4.5vw; }
+}
+
+/* ============================================================
+   RTL READINESS (§09b)
+   Persian has no uppercase, and letter-spacing breaks
+   Arabic-script joining. Emphasis moves to weight, size and
+   the gold/silver temperature rule — which DOES translate,
+   because it is colour, not typography.
+   ============================================================ */
+:root:lang(fa),
+[dir="rtl"] {
+  --track-display: 0;
+  --track-cities:  0;
+  --track-tagline: 0;
+  --track-cta:     0;
+  --track-nav:     0;
+  --track-card:    0;
+  /* --font-display-fa: reserved. No Persian face exists in any
+     reference; the value is not invented here. */
+}
+[dir="rtl"] [data-uppercase] { text-transform: none; }
