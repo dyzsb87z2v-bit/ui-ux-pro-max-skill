@@ -8,10 +8,21 @@
  * plus a very soft warm bloom. Both measured.
  */
 import { brand } from '../../data/site';
-interface Props { as?: 'h1' | 'span' | 'div'; size?: string; class?: string; bloom?: boolean }
-const { as: Tag = 'span', size, class: cls = '', bloom = true } = Astro.props;
+interface Props {
+  as?: 'h1' | 'span' | 'div';
+  size?: string;
+  class?: string;
+  bloom?: boolean;
+  /**
+   * 'display' is the page's single hero-scale wordmark and is what the
+   * 6.2:1 type-ratio invariant measures. Every other lockup (header brand,
+   * nav plate) is 'brand' — the same mark, not the display tier.
+   */
+  role?: 'display' | 'brand';
+}
+const { as: Tag = 'span', size, class: cls = '', bloom = true, role = 'brand' } = Astro.props;
 ---
-<Tag data-type="display" class={`wordmark ${bloom ? 'bloom' : ''} ${cls}`} style={size ? `font-size:${size}` : undefined}>
+<Tag data-type={role} class={`wordmark ${bloom ? 'bloom' : ''} ${cls}`} style={size ? `font-size:${size}` : undefined}>
   {brand.wordmark}
 </Tag>
 

@@ -1,10 +1,18 @@
 ---
 import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
 import Cover from '../components/Cover.astro';
 import { brand } from '../data/site';
 ---
 <Base title={`${brand.wordmark} — ${brand.tagline}`}>
-  <main id="main" class="frame">
-    <Cover />
-  </main>
+  <div class="shell">
+    <SiteHeader current="/" />
+    <main id="main" class="frame">
+      <Cover />
+    </main>
+  </div>
 </Base>
+
+<style>
+  .shell { position: relative; }
+</style>

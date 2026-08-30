@@ -179,23 +179,39 @@ test.describe('invariant 5 — asymmetric panel rhythm', () => {
 
 /* ---------- 6. temperature encodes state ---------- */
 test.describe('invariant 6 — temperature encodes state', () => {
-  test('/: interactive elements are gold, labels are silver', async ({ page }) => {
+  test('/: every interactive colour is on the gold or silver ramp, and current is gold', async ({ page }) => {
     await page.goto('/');
-    const wrong = await page.evaluate(() => {
-      const warm = (c: string) => {
-        const m = c.match(/\d+/g); if (!m) return false;
-        const [r, g, b] = m.map(Number);
-        return r > b + 12 && r >= g && g > b; // warm ramp
+    const result = await page.evaluate(() => {
+      const rgb = (c: string) => (c.match(/\d+/g) ?? []).slice(0, 3).map(Number);
+      // Gold ramp: warm, red-dominant. Silver ramp: achromatic.
+      const gold = (c: string) => { const [r, g, b] = rgb(c); return r > b + 12 && r >= g && g >= b; };
+      const silver = (c: string) => {
+        const [r, g, b] = rgb(c);
+        return Math.abs(r - g) <= 10 && Math.abs(g - b) <= 10 && Math.abs(r - b) <= 12;
       };
-      const out: string[] = [];
-      for (const el of Array.from(document.querySelectorAll('a, button, [role="button"]'))) {
-        if ((el as HTMLElement).dataset.tone === 'silver') continue; // non-purchasable, by design
+      const offSystem: string[] = [];
+      const currentNotGold: string[] = [];
+      const els = Array.from(document.querySelectorAll('a, button, [role="button"]'));
+      for (const el of els) {
         if (el.classList.contains('skip-link')) continue;
         const c = getComputedStyle(el).color;
-        if (!warm(c)) out.push((el.textContent || '').trim().slice(0, 32) + ' :: ' + c);
+        const label = (el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 28);
+        // The measured rule: gold = brand/active, silver = neutral/label.
+        // Idle nav links ARE interactive and ARE silver in the reference, so
+        // the assertion is that nothing sits OUTSIDE the two ramps.
+        if (!gold(c) && !silver(c)) offSystem.push(`${label} :: ${c}`);
+        // Anything marked current must be gold — that is the state signal.
+        if (el.getAttribute('aria-current') === 'page' && !gold(c)) {
+          currentNotGold.push(`${label} :: ${c}`);
+        }
       }
-      return out;
+      // The primary CTA must be gold.
+      const cta = document.querySelector('.ghost[data-tone="gold"]');
+      const ctaGold = cta ? gold(getComputedStyle(cta).color) : null;
+      return { offSystem, currentNotGold, ctaGold };
     });
-    expect(wrong, 'interactive elements must take the gold ramp').toEqual([]);
+    expect(result.offSystem, 'interactive colours must sit on the gold or silver ramp').toEqual([]);
+    expect(result.currentNotGold, 'aria-current elements must be gold — temperature is the state signal').toEqual([]);
+    expect(result.ctaGold, 'primary CTA must be on the gold ramp').toBe(true);
   });
 });

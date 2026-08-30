@@ -1,0 +1,85 @@
+---
+/**
+ * NavPlate — the measured vertical navigation plate.
+ *
+ * Panel is 151 x 431 @1143 (1 : 2.85). Internal rhythm, measured from the
+ * panel's top edge:
+ *   pad-top 24 -> logo mark 55 -> gap 14 -> wordmark 18 -> gap 20
+ *   -> descriptor 3 lines @ 15-16px pitch (leading 2.2x) -> gap 19
+ *   -> ornamental divider block 17 -> gap 23 -> items at a constant 30px pitch
+ *
+ * On narrow viewports this same composition becomes the full-screen menu
+ * (spec §09). It is NOT replaced by a generic drawer: the numbering, the
+ * ornamental divider, the gradient underline and the crescent markers are
+ * the navigation's identity.
+ */
+import Ornament from './primitives/Ornament.astro';
+import Wordmark from './primitives/Wordmark.astro';
+import Divider from './primitives/Divider.astro';
+import NavItem from './primitives/NavItem.astro';
+import { brand, nav } from '../data/site';
+
+interface Props { current?: string; class?: string }
+const { current = '/', class: cls = '' } = Astro.props;
+---
+<nav class={`plate ${cls}`} aria-label="Main">
+  <Ornament variant="lozenge" class="mark" size="100%" />
+  <Wordmark as="span" class="plate-wordmark" bloom={false} />
+
+  <p class="descriptor" data-uppercase>
+    {brand.descriptor.map((line) => <span>{line}</span>)}
+  </p>
+
+  <Divider class="plate-divider" />
+
+  <ul class="items">
+    {nav.map((item) => (
+      <li>
+        <NavItem n={item.n} label={item.label} href={item.href} active={item.href === current} />
+      </li>
+    ))}
+  </ul>
+</nav>
+
+<style>
+  .plate {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    /* padding-top measured at 24/431 = 5.6% of plate height */
+    padding-block-start: 5.6%;
+    padding-inline: 8%;
+  }
+
+  /* Logo mark measured at 55px on a 151px-wide panel = 36% of width. */
+  .plate :global(.mark) { inline-size: 36%; max-inline-size: 84px; height: auto; color: var(--gold-hi); }
+
+  .plate :global(.plate-wordmark) {
+    font-size: var(--type-plate);
+    margin-block-start: 0.55em;
+  }
+
+  .descriptor {
+    display: grid;
+    margin: 1.15em 0 0;
+    font-family: var(--font-display);
+    font-size: var(--type-descriptor);
+    letter-spacing: var(--track-nav);
+    line-height: var(--leading-descriptor);
+    color: var(--silver);
+    text-transform: uppercase;
+  }
+
+  .plate :global(.plate-divider) { inline-size: 100%; margin-block: 1.5em 1.6em; }
+
+  .items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    inline-size: 100%;
+    display: grid;
+    /* Constant 30px pitch @1143 = 7% of plate height. */
+    gap: 0.55em;
+  }
+  .items li { display: block; }
+</style>

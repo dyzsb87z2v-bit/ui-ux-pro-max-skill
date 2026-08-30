@@ -1,0 +1,26 @@
+---
+/**
+ * Icon — line icons for the public header.
+ *
+ * The video header shows a search magnifier (silver) and a shopping bag
+ * (gold) at ~1.5px stroke. Those two are drawn here to that weight.
+ *
+ * NOT to be confused with the ADMIN cartouche family (scalloped shield,
+ * serrated box, circular rosette, eight-lobed gear) — those were never
+ * exported and must be redrawn from a higher-resolution source.
+ * See PLACEHOLDERS.md.
+ */
+interface Props { name: 'search' | 'bag' | 'menu' | 'close'; size?: string; class?: string }
+const { name, size = '1.1em', class: cls = '' } = Astro.props;
+---
+<svg
+  class={cls} width={size} height={size} viewBox="0 0 24 24"
+  fill="none" stroke="currentColor" stroke-width="1.5"
+  stroke-linecap="round" stroke-linejoin="round"
+  aria-hidden="true" focusable="false"
+>
+  {name === 'search' && (<><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></>)}
+  {name === 'bag' && (<><path d="M4.5 7.5h15l-1.1 12.2a1.5 1.5 0 0 1-1.5 1.3H7.1a1.5 1.5 0 0 1-1.5-1.3Z" /><path d="M8.75 9.5V6.6a3.25 3.25 0 0 1 6.5 0v2.9" /></>)}
+  {name === 'menu' && (<><path d="M3.5 7h17M3.5 12h17M3.5 17h17" /></>)}
+  {name === 'close' && (<><path d="M5.5 5.5l13 13M18.5 5.5l-13 13" /></>)}
+</svg>

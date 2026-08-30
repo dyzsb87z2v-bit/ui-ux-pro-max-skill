@@ -56,7 +56,7 @@ import { brand } from '../data/site';
     <Ornament variant="medallion" class="medallion" size="100%" />
 
     <h1 id="cover-title" class="title">
-      <Wordmark as="span" />
+      <Wordmark as="span" role="display" />
       <span class="visually-hidden">— {brand.tagline}</span>
     </h1>
 
@@ -130,7 +130,7 @@ import { brand } from '../data/site';
     padding-inline: var(--space-class);
   }
 
-  .medallion { grid-row: 2; color: var(--gold-hi); block-size: 100%; opacity: 0.92; }
+  .stack :global(.medallion) { grid-row: 2; color: var(--gold-hi); block-size: 100%; width: auto; opacity: 0.92; }
 
   .title { grid-row: 4; margin: 0; align-self: center; line-height: 1; }
   .title :global(.wordmark) { font-size: var(--type-display); }

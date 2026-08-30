@@ -1,0 +1,82 @@
+---
+/**
+ * NavItem — measured anatomy: NN · 1px vertical rule · UPPERCASE label.
+ *
+ * ACTIVE  gold #B2A589, larger block (15px vs 12px @1143), and a full-width
+ *         underline with a HORIZONTAL GRADIENT — bright left, fading right.
+ *         A flat rule loses the effect.
+ * IDLE    silver #A4A4A4, plus a faint gold crescent under the NUMERAL only.
+ *
+ * State is a TEMPERATURE shift, not a weight change. This is the system's
+ * entire state language and it repeats in cards and in the admin rail.
+ */
+interface Props { n: string; label: string; href: string; active?: boolean }
+const { n, label, href, active = false } = Astro.props;
+---
+<a class="nav-item" href={href} data-uppercase aria-current={active ? 'page' : undefined}>
+  <span class="n">{n}<span class="crescent" aria-hidden="true"></span></span>
+  <span class="rule" aria-hidden="true"></span>
+  <span class="label">{label}</span>
+  <span class="underline" aria-hidden="true"></span>
+</a>
+
+<style>
+  .nav-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    align-items: center;
+    gap: 0.75em;
+    padding-block: 0.55em;
+    font-family: var(--font-display);
+    font-size: var(--type-nav-idle);
+    letter-spacing: var(--track-nav);
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--silver);
+    line-height: 1;
+    transition: color 240ms var(--ease-cinematic), font-size 240ms var(--ease-cinematic);
+  }
+  .n { position: relative; font-variant-numeric: lining-nums tabular-nums; }
+
+  /* Idle marker: a faint gold crescent under the numeral only. */
+  .crescent {
+    position: absolute;
+    inset-block-end: -0.42em;
+    inset-inline-start: 50%;
+    inline-size: 1.5em; block-size: 0.42em;
+    transform: translateX(-50%);
+    border-block-end: 1px solid var(--gold);
+    border-radius: 0 0 50% 50% / 0 0 100% 100%;
+    opacity: 0.34;
+    transition: opacity 240ms var(--ease-cinematic);
+  }
+  .rule { inline-size: 1px; block-size: 1.35em; background: currentColor; opacity: 0.42; }
+  .label { justify-self: start; }
+
+  /* Active marker: full-width rule with a horizontal gradient. */
+  .underline {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: -0.1em;
+    block-size: 1px;
+    background: linear-gradient(
+      to var(--underline-end, right),
+      var(--gold-hi) 0%, var(--gold) 38%, rgba(141, 94, 55, 0.22) 100%
+    );
+    opacity: 0;
+    transform: scaleX(0.45);
+    transform-origin: inline-start;
+    transition: opacity 300ms var(--ease-cinematic), transform 420ms var(--ease-cinematic);
+  }
+
+  .nav-item[aria-current='page'] {
+    color: var(--gold);
+    font-size: var(--type-nav-active);
+  }
+  .nav-item[aria-current='page'] .underline { opacity: 1; transform: scaleX(1); }
+  .nav-item[aria-current='page'] .crescent { opacity: 0; }
+
+  .nav-item:hover, .nav-item:focus-visible { color: var(--gold-hi); }
+  .nav-item:hover .crescent { opacity: 0.7; }
+</style>
