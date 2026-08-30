@@ -1,0 +1,254 @@
+---
+/**
+ * SiteHeader — measured from the DECODED INTRO VIDEO, not the still
+ * composite (the still has no horizontal header; the video does).
+ *
+ * Measured on the settled final frame:
+ *   band spans x 14.1-81.1%, y 0.8-6.8% of the frame
+ *   wordmark + lozenge left
+ *   five nav items centre-right, uppercase, letter-spaced, silver
+ *   search magnifier (silver), shopping bag (gold), text item
+ *   NO bar fill and NO border — it sits directly over the scene
+ *
+ * DERIVED: the video shows five nav slots while the still composite's plate
+ * shows six numbered entries. Reading the wordmark as "Home" reconciles them
+ * exactly — 1 mark + 5 links = the six-page set. Flagged as derivation.
+ *
+ * UNRELIABLE: the video's own labels are AI-garbled (only CONTACT US
+ * resolves). Labels come from the still composite, which is legible.
+ */
+import Ornament from './primitives/Ornament.astro';
+import Wordmark from './primitives/Wordmark.astro';
+import Icon from './primitives/Icon.astro';
+import NavPlate from './NavPlate.astro';
+import { nav } from '../data/site';
+
+interface Props { current?: string }
+const { current = '/' } = Astro.props;
+
+// Home is carried by the wordmark; the bar shows the remaining five.
+const barLinks = nav.filter((i) => i.href !== '/');
+---
+<header class="site-header" data-site-header>
+  <a class="brand" href="/" aria-label="MiLAEDiA — home">
+    <Ornament variant="lozenge" size="1.5em" class="brand-mark" />
+    <Wordmark as="span" class="brand-word" bloom={false} />
+  </a>
+
+  <nav class="bar" aria-label="Primary">
+    <ul>
+      {barLinks.map((item) => (
+        <li>
+          <a href={item.href} data-uppercase aria-current={item.href === current ? 'page' : undefined}>
+            {item.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+
+  <div class="actions">
+    <a class="action" href="/search" aria-label="Search">
+      <Icon name="search" />
+    </a>
+    <a class="action action-bag" href="/bag" aria-label="Bag">
+      <Icon name="bag" />
+      {/* Count is wired in Phase 8 with the cart. */}
+      <span class="count" data-bag-count hidden></span>
+    </a>
+    <a class="action account" href="/account" data-uppercase>Account</a>
+
+    <button
+      class="action menu-trigger"
+      type="button"
+      aria-label="Open menu"
+      aria-expanded="false"
+      aria-controls="nav-overlay"
+      data-menu-open
+    >
+      <Icon name="menu" />
+    </button>
+  </div>
+</header>
+
+<!-- Narrow-viewport menu. Keeps the measured plate composition rather than
+     becoming a generic drawer (spec §09). -->
+<div class="overlay" id="nav-overlay" hidden data-nav-overlay>
+  <button class="overlay-close" type="button" aria-label="Close menu" data-menu-close>
+    <Icon name="close" size="1.35em" />
+  </button>
+  <NavPlate current={current} class="overlay-plate" />
+</div>
+
+<style>
+  .site-header {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: var(--space-class);
+    /* Measured band height: 6% of frame. No fill, no border. */
+    min-block-size: clamp(44px, 6vh, 64px);
+    padding-inline: clamp(16px, 4vw, 64px);
+    padding-block: clamp(8px, 1.2vh, 16px);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    text-decoration: none;
+    color: var(--gold-hi);
+    flex: 0 0 auto;
+  }
+  .brand :global(.brand-mark) { color: var(--gold); flex: 0 0 auto; }
+  .brand :global(.brand-word) { font-size: var(--type-nav-active); }
+
+  .bar { margin-inline-start: auto; }
+  .bar ul {
+    display: flex;
+    align-items: center;
+    gap: clamp(1rem, 2.4vw, 2.4rem);
+    list-style: none; margin: 0; padding: 0;
+  }
+  .bar a {
+    font-family: var(--font-display);
+    font-size: var(--type-nav-idle);
+    letter-spacing: var(--track-nav);
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--silver);           /* neutral: label */
+    white-space: nowrap;
+    transition: color 240ms var(--ease-cinematic);
+  }
+  .bar a:hover, .bar a:focus-visible { color: var(--gold-hi); }
+  .bar a[aria-current='page'] { color: var(--gold); }  /* temperature = state */
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.7rem, 1.4vw, 1.35rem);
+    flex: 0 0 auto;
+  }
+  .action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--silver);
+    text-decoration: none;
+    background: none;
+    border: 0;
+    padding: 0.35em;
+    cursor: pointer;
+    transition: color 240ms var(--ease-cinematic);
+  }
+  .action:hover, .action:focus-visible { color: var(--gold-hi); }
+
+  /* Measured: the bag icon is GOLD while the magnifier is silver — the bag
+     is a purchase affordance, the magnifier is a tool. Temperature = state. */
+  .action-bag { position: relative; color: var(--gold); }
+
+  .count {
+    position: absolute;
+    inset-block-start: -0.15em;
+    inset-inline-end: -0.15em;
+    min-inline-size: 1.35em;
+    padding: 0 0.3em;
+    border: 1px solid var(--gold);
+    border-radius: 999px;
+    background: var(--ground);
+    color: var(--gold-hi);
+    font-family: var(--font-display);
+    font-size: 0.62em;
+    line-height: 1.5;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .account {
+    font-family: var(--font-display);
+    font-size: var(--type-nav-idle);
+    letter-spacing: var(--track-nav);
+    text-transform: uppercase;
+  }
+
+  .menu-trigger { display: none; }
+
+  /* ---- narrow viewports ---- */
+  @media (max-width: 900px) {
+    .bar { display: none; }
+    .account { display: none; }
+    .menu-trigger { display: inline-flex; }
+    .actions { margin-inline-start: auto; }
+  }
+
+  /* ---- overlay ---- */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: var(--ground);
+    overflow-y: auto;
+    display: grid;
+    align-content: center;
+    padding-block: 12vh 8vh;
+    animation: overlay-in 320ms var(--ease-cinematic) both;
+  }
+  .overlay[hidden] { display: none; }
+  @keyframes overlay-in { from { opacity: 0 } to { opacity: 1 } }
+
+  .overlay-close {
+    position: absolute;
+    inset-block-start: clamp(12px, 3vh, 28px);
+    inset-inline-end: clamp(16px, 4vw, 40px);
+    background: none; border: 0; padding: 0.4em;
+    color: var(--gold-hi); cursor: pointer;
+  }
+  .overlay :global(.overlay-plate) { inline-size: min(420px, 86vw); margin-inline: auto; }
+</style>
+
+<script>
+  // Vanilla. No framework island needed for a disclosure widget — the JS
+  // budget (<=40 KB, spec §23) belongs to the intro gate and parallax.
+  const trigger = document.querySelector<HTMLButtonElement>('[data-menu-open]');
+  const closer = document.querySelector<HTMLButtonElement>('[data-menu-close]');
+  const overlay = document.querySelector<HTMLElement>('[data-nav-overlay]');
+
+  if (trigger && closer && overlay) {
+    let lastFocused: HTMLElement | null = null;
+
+    const open = () => {
+      lastFocused = document.activeElement as HTMLElement;
+      overlay.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      document.documentElement.style.overflow = 'hidden';
+      closer.focus();
+    };
+
+    const close = () => {
+      overlay.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+      document.documentElement.style.overflow = '';
+      (lastFocused ?? trigger).focus();
+    };
+
+    trigger.addEventListener('click', open);
+    closer.addEventListener('click', close);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !overlay.hidden) close();
+    });
+
+    // Focus trap — the overlay is a modal surface.
+    overlay.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const focusable = overlay.querySelectorAll<HTMLElement>('a[href], button:not([disabled])');
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+  }
+</script>

@@ -1,0 +1,95 @@
+---
+/**
+ * GhostButton — the system's ONLY button.
+ *
+ * Measured: 1px hairline border, transparent fill, radius ~5px, tracking
+ * ~0.18em, and — the distinctive part — a diamond ornament centred on the
+ * TOP and BOTTOM edges that interrupts the border.
+ *
+ * Confirmed independently in the still composite AND the decoded intro
+ * video. A filled button would be the first solid surface in the design.
+ *
+ * `tone="silver"` is the non-purchasable state (sold / reserved / out of
+ * stock). Per the measured state rule, state is a TEMPERATURE shift, not a
+ * grey pill or a badge. (Spec §13)
+ */
+interface Props {
+  href?: string;
+  tone?: 'gold' | 'silver';
+  type?: 'button' | 'submit';
+  disabled?: boolean;
+  class?: string;
+}
+const { href, tone = 'gold', type = 'button', disabled = false, class: cls = '' } = Astro.props;
+const Tag = href && !disabled ? 'a' : 'button';
+---
+<Tag
+  class={`ghost ${cls}`}
+  data-tone={tone}
+  data-uppercase
+  href={href && !disabled ? href : undefined}
+  type={Tag === 'button' ? type : undefined}
+  disabled={Tag === 'button' && disabled ? true : undefined}
+  aria-disabled={disabled ? 'true' : undefined}
+>
+  <span class="edge edge-top" aria-hidden="true"></span>
+  <span class="label"><slot /></span>
+  <span class="edge edge-bottom" aria-hidden="true"></span>
+</Tag>
+
+<style>
+  .ghost {
+    --tone-color: var(--gold-hi);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.95em 2.1em;
+    border: var(--border) solid var(--tone-color);
+    border-radius: 5px;
+    background: transparent;      /* never a fill */
+    color: var(--tone-color);
+    font-family: var(--font-display);
+    font-size: var(--type-nav-active);
+    font-weight: 400;
+    letter-spacing: var(--track-cta);
+    text-transform: uppercase;
+    text-decoration: none;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 260ms var(--ease-cinematic), border-color 260ms var(--ease-cinematic);
+  }
+  .ghost[data-tone='silver'] { --tone-color: var(--silver); cursor: default; }
+  .ghost[aria-disabled='true'] { pointer-events: none; }
+
+  /* Hover/focus has no measured reference. Derived from the system's own
+     rule: warm up, never brighten the surface. (Spec §04) */
+  .ghost[data-tone='gold']:hover,
+  .ghost[data-tone='gold']:focus-visible { --tone-color: #F3DEBB; }
+
+  /* The diamond ornaments that interrupt the border, top and bottom. */
+  .edge {
+    position: absolute;
+    inset-inline-start: 50%;
+    inline-size: 1.55em;
+    block-size: 7px;
+    transform: translateX(-50%);
+    background: var(--ground);
+  }
+  .edge::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    inline-size: 5px; block-size: 5px;
+    transform: translate(-50%, -50%) rotate(45deg);
+    border: var(--border) solid var(--tone-color);
+  }
+  .edge-top { inset-block-start: -4px; }
+  .edge-bottom { inset-block-end: -4px; }
+  .label { display: inline-block; }
+
+  @media (max-width: 640px) {
+    .ghost { padding: 0.9em 1.35em; font-size: var(--type-nav-idle); }
+  }
+</style>

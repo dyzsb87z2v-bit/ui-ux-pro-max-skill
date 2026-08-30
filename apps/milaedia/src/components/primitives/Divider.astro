@@ -1,0 +1,28 @@
+---
+/**
+ * OrnamentalDivider — measured: rule — lozenge — rule, with the lozenge
+ * interrupting the line. Block height 17px @1143.
+ * Confirmed independently in BOTH the still composite (nav plate) and the
+ * decoded intro video (above the CTA). Two independent sources agreeing.
+ */
+import Ornament from './Ornament.astro';
+interface Props { class?: string }
+const { class: cls = '' } = Astro.props;
+---
+<div class={`divider ${cls}`} role="presentation">
+  <span class="rule"></span>
+  <Ornament variant="lozenge" size="0.95em" />
+  <span class="rule"></span>
+</div>
+
+<style>
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 0.7em;
+    color: var(--gold);
+    opacity: 0.72;
+    font-size: var(--type-tagline);
+  }
+  .rule { flex: 1; block-size: 1px; background: currentColor; opacity: 0.5; }
+</style>
