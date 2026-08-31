@@ -1,0 +1,23 @@
+{
+  // Cloudflare Workers, serving the built site as static assets.
+  //
+  // Cloudflare is folding Pages into Workers, and the dashboard's "Create"
+  // flow now lands on Workers by default. A Worker with no `main` entry and
+  // an `assets` directory is a pure static site -- no server code runs, the
+  // edge serves the files in ./dist directly. That is exactly what this
+  // project needs, and it makes a Workers deployment work without switching
+  // back to Pages.
+  //
+  // The dashboard reads this file, so Build command and output directory do
+  // not have to be typed into the UI.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "milaedia",
+  "compatibility_date": "2026-08-01",
+  "assets": {
+    "directory": "./dist",
+    // Astro builds directory-style routes (/about/index.html), which the
+    // asset server resolves on its own. Anything genuinely missing gets the
+    // site's own 404 page rather than a bare Cloudflare error.
+    "not_found_handling": "404-page"
+  }
+}

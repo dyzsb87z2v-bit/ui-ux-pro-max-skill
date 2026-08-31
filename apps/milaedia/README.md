@@ -55,10 +55,16 @@ server runtime, so any static host serves it:
 
 | Host | What to set |
 |---|---|
+| Cloudflare Workers | nothing -- `wrangler.jsonc` declares `./dist` as static assets |
 | Cloudflare Pages | build `npm run build`, output directory `dist` |
 | Netlify | same |
 | GitHub Pages | publish `dist/` |
 | nginx / Apache | serve `dist/` as the document root |
+
+Cloudflare is folding Pages into Workers, and the dashboard's "Create" flow
+now lands on Workers by default. `wrangler.jsonc` covers that case: a Worker
+with no `main` entry and an `assets` directory runs no server code -- the edge
+just serves the files in `dist/`.
 
 Vercel works too, but note its Hobby tier prohibits commercial use — a shop
 needs a paid plan there.

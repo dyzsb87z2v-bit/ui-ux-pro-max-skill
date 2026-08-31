@@ -1,0 +1,50 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import GhostButton from '../components/primitives/GhostButton.astro';
+import Divider from '../components/primitives/Divider.astro';
+---
+<Base title="Page not found — MiLAEDiA" description="This page does not exist.">
+  <SiteHeader />
+  <main id="main" class="frame nf">
+    <p class="code" data-uppercase>404</p>
+    <h1>This page has been rehung</h1>
+    <Divider class="nf-divider" />
+    <p class="lede">
+      The address you followed does not lead anywhere in the house. It may have
+      moved, or a piece it pointed to may have been sold.
+    </p>
+    <div class="acts">
+      <GhostButton href="/collections">View the collections</GhostButton>
+      <a class="quiet" href="/contact">Ask the atelier</a>
+    </div>
+  </main>
+  <SiteFooter />
+</Base>
+<style>
+  .nf {
+    padding-block: clamp(90px, 16vh, 190px) clamp(4rem, 10vh, 8rem);
+    max-inline-size: 60ch; display: grid; gap: 1.3rem; justify-items: start;
+  }
+  .code {
+    margin: 0; font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities); color: var(--bronze);
+  }
+  h1 {
+    margin: 0; font-family: var(--font-display); font-weight: 300;
+    font-size: clamp(2.2rem, 5.6vw, 4rem); line-height: 1.08; color: #EDE7DA;
+  }
+  .nf :global(.nf-divider) { inline-size: min(320px, 60%); }
+  .lede {
+    margin: 0; font-family: var(--font-display); font-size: 1.05rem;
+    line-height: 1.85; color: var(--silver);
+  }
+  .acts { display: flex; gap: 1.4rem; align-items: center; flex-wrap: wrap; margin-block-start: 0.5rem; }
+  .quiet {
+    font-family: var(--font-display); font-size: var(--type-card-link);
+    color: var(--silver); text-decoration: none;
+    border-block-end: 1px solid var(--hairline); padding-block-end: 2px;
+  }
+  .quiet:hover { color: var(--gold-hi); border-color: var(--gold); }
+</style>
