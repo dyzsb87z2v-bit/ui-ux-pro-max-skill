@@ -184,3 +184,44 @@ twice.
 **Retire with:** product photography that is texture-only from the start,
 following the measured rule — texture crop for rugs, full pictorial scene for
 tapestries.
+
+---
+
+## Product art resolution (added with the matted-plate change)
+
+**Constraint, measured:** the five collection sources are `260 x 360 px`
+native (`src/assets/collections/*.png`), cropped to `260 x 226` because the
+bottom 31% of each carries a baked-in title. No higher-resolution source
+exists anywhere in the supplied material -- the master composite is
+1143 x 1017 and the 2x zooms in the analysis scratch are interpolation, not
+detail.
+
+Two consequences were visible in the first full-site render and are now
+handled. Neither is a fix for the underlying asset gap.
+
+1. **Upscale blur.** Product cards asked for 300/600w and the rug viewer for
+   520/900/1400w from a 260px source -- up to 5.4x. Both surfaces are now
+   *matted*: the art renders at or near 1:1 (<=300px on cards, <=420px in the
+   viewer) inside a dark plate with a hairline, and the surround reads as the
+   wall behind a hung piece. This matches the matted-plate composition in the
+   references and is sharp. It is NOT a substitute for product photography.
+
+2. **Identical sibling cards.** Several demo pieces share one collection
+   source, so a fixed `object-position` rendered two cards in a row as the
+   same tile. `focal()` in `src/lib/images.ts` derives a deterministic pan
+   per product id, so each piece shows a different region of the same
+   verified weave.
+
+**At launch:** replace `src/assets/collections/*.png` with real per-product
+photography, delete the `focal()` call sites, and restore full-bleed art with
+the larger `widths` sets. Nothing else has to change.
+
+## Video codec note
+
+`public/media/atelier-weaver.mp4` is H.264. The Chromium build in this
+analysis container ships without an H.264 decoder (`canPlayType` returns
+empty; the file fails with `MEDIA_ERR_SRC_NOT_SUPPORTED` even read straight
+off disk), so the atelier scene falls back to its poster there. This is a
+property of the test browser, not of the site or the asset -- Chrome, Safari,
+Firefox and Edge all decode it. The poster fallback is the intended
+degradation and is what low-power and reduced-motion visitors see too.

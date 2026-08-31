@@ -1,12 +1,13 @@
 ---
 import { Picture } from 'astro:assets';
-import { collectionImages } from '../lib/images';
+import { collectionImages, focal } from '../lib/images';
 import { formatPrice, type Product } from '../data/catalogue';
 import { deriveAvailability, stateTone } from '../lib/inventory';
 
 interface Props { product: Product; eager?: boolean }
 const { product: p, eager = false } = Astro.props;
 const img = collectionImages[p.image];
+const spot = focal(p.id);
 const avail = deriveAvailability({
   mode: p.inventoryMode, stockQty: p.stockQty, reservedQty: p.reservedQty,
   soldAt: p.soldAt ? new Date(p.soldAt) : null, reservedUntil: null,
@@ -19,9 +20,9 @@ const label: Record<string, string> = {
 };
 ---
 <a class="pcard" href={`/collections/${p.collection}/${p.slug}`} data-tilt>
-  <span class="art" aria-hidden="true">
-    <Picture src={img} alt="" widths={[300, 600]} sizes="(max-width:640px) 88vw, 30vw"
-             formats={['avif']} fallbackFormat="webp" quality={64}
+  <span class="art" aria-hidden="true" style={`--spot:${spot}`}>
+    <Picture src={img} alt="" widths={[300, 520]} sizes="(max-width:640px) 88vw, 300px"
+             formats={['avif']} fallbackFormat="webp" quality={82}
              loading={eager ? 'eager' : 'lazy'} />
   </span>
   <span class="meta">
@@ -40,13 +41,21 @@ const label: Record<string, string> = {
     transform: perspective(1000px) rotateY(var(--ty,0deg)) rotateX(var(--tx,0deg));
     transition: transform 520ms var(--ease-cinematic);
   }
+  /* Matted, not full-bleed -- same reasoning as RugViewer: the collection
+     crops are 260 px native, so stretching them across a 440 px column read
+     as soft. Held near 1:1 inside a dark mat they are sharp, and the frame
+     matches the matted plates in the references. */
   .art {
-    display: block; aspect-ratio: 4/5; overflow: hidden;
+    display: grid; place-items: center; aspect-ratio: 4/5; overflow: hidden;
     border: var(--border) solid var(--hairline); border-radius: var(--radius-card);
     background: var(--panel);
   }
   .art :global(img) {
-    inline-size: 100%; block-size: 100%; object-fit: cover;
+    inline-size: min(100%, 300px); block-size: auto; aspect-ratio: 4/5;
+    object-fit: cover; border-radius: 2px;
+    /* Per-piece focal pan: the collection crops are shared, so a fixed
+       position rendered sibling cards as identical tiles. */
+    object-position: var(--spot, 50% 50%);
     transform: scale(var(--s,1)); transition: transform 700ms var(--ease-cinematic);
   }
   .pcard:hover .art :global(img) { --s: 1.045; }

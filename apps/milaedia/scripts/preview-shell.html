@@ -1,0 +1,152 @@
+<title>MiLAEDiA Atelier</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { height: 100%; background: #000; }
+  body { margin: 0; overflow: hidden; font-family: 'Cormorant Garamond', Georgia, serif; }
+
+  #stage {
+    position: fixed; inset: 0; display: grid; place-items: center;
+    background: #000; overflow: hidden;
+  }
+  #stage[data-mode="full"] { place-items: stretch; }
+
+  #frame {
+    border: 0; background: #000; display: block;
+    inline-size: 100%; block-size: 100%;
+  }
+  #stage:not([data-mode="full"]) #frame {
+    border-radius: 14px;
+    box-shadow: 0 0 0 1px #4F4840, 0 30px 80px rgba(0,0,0,.9);
+  }
+  #stage[data-mode="tablet"] #frame { inline-size: 834px;  block-size: min(1112px, 94vh); }
+  #stage[data-mode="phone"]  #frame { inline-size: 390px;  block-size: min(844px, 94vh); }
+
+  /* ---- inspector pill ---- */
+  #pill {
+    position: fixed; inset-block-end: 14px; inset-inline-end: 14px; z-index: 5;
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px 7px 8px; border-radius: 999px;
+    background: rgba(10,8,6,.94); border: 1px solid #4F4840;
+    backdrop-filter: blur(8px);
+    font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+    color: #A4A4A4; max-inline-size: calc(100vw - 28px);
+  }
+  #pill button {
+    background: none; border: 0; padding: 4px 6px; cursor: pointer;
+    color: #A4A4A4; font: inherit; letter-spacing: inherit; text-transform: inherit;
+    border-radius: 6px; line-height: 1;
+  }
+  #pill button:hover { color: #E7CA9C; }
+  #pill button[aria-pressed="true"] { color: #B2A589; background: #332C21; }
+  #route {
+    color: #B2A589; font-variant-numeric: tabular-nums; letter-spacing: .06em;
+    text-transform: none; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; max-inline-size: 34ch;
+  }
+  .sep { inline-size: 1px; align-self: stretch; background: #4F4840; }
+  #hide { color: #8D5E37; }
+  #show {
+    position: fixed; inset-block-end: 14px; inset-inline-end: 14px; z-index: 5;
+    display: none; inline-size: 30px; block-size: 30px; border-radius: 999px;
+    background: rgba(10,8,6,.94); border: 1px solid #4F4840; color: #B2A589;
+    cursor: pointer; font: 13px/1 'Cormorant Garamond', Georgia, serif;
+  }
+  body[data-chrome="off"] #pill { display: none; }
+  body[data-chrome="off"] #show { display: block; }
+  @media (max-width: 700px) { #route { max-inline-size: 12ch; } .wide { display: none; } }
+</style>
+
+<div id="stage" data-mode="full"><iframe id="frame" title="MiLAEDiA preview"></iframe></div>
+
+<div id="pill">
+  <button id="back" title="Back" aria-label="Back">&#8249;</button>
+  <span id="route">/</span>
+  <span class="sep"></span>
+  <button data-mode="full"   aria-pressed="true"  class="wide">Desktop</button>
+  <button data-mode="tablet" aria-pressed="false" class="wide">Tablet</button>
+  <button data-mode="phone"  aria-pressed="false">Phone</button>
+  <span class="sep"></span>
+  <button id="reset" title="Clear bag + replay the intro">Reset</button>
+  <button id="hide" title="Hide this bar" aria-label="Hide">&#10005;</button>
+</div>
+<button id="show" title="Show inspector">&#9679;</button>
+
+<script>
+(function () {
+  var P = /*__PAYLOAD__*/null;
+
+  // JS chunks call this for /media/* so large binaries are stored once.
+  window.__res = function (p) { return P.media[p] || p; };
+
+  var RES = P.res, ROUTES = P.routes;
+  var frame = document.getElementById('frame');
+  var stage = document.getElementById('stage');
+  var label = document.getElementById('route');
+  var history = [];
+
+  function normalise(href) {
+    var s = String(href).split('#')[0];
+    var q = '', i = s.indexOf('?');
+    if (i >= 0) { q = s.slice(i); s = s.slice(0, i); }
+    if (!s) s = '/';
+    if (s[0] !== '/') s = '/' + s;
+    if (s !== '/' && !/\/$/.test(s)) s += '/';
+    return { path: s, search: q };
+  }
+
+  function resolve(path) {
+    if (ROUTES[path]) return path;
+    var alt = path.replace(/\/$/, '');
+    if (ROUTES[alt]) return alt;
+    if (ROUTES[path + '/']) return path + '/';
+    return null;
+  }
+
+  function go(href, push) {
+    var n = normalise(href);
+    var key = resolve(n.path);
+    if (!key) { label.textContent = n.path + '  (not a route)'; return; }
+    if (push !== false) history.push(key + n.search);
+    label.textContent = n.path + n.search;
+    var html = ROUTES[key]
+      .replace(/@@Q@@/g, JSON.stringify(n.search))
+      .replace(/@@R(\d+)@@/g, function (_m, i) { return RES[+i]; });
+    frame.srcdoc = html;
+  }
+
+  addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (d.t === 'nav') go(d.p);
+    else if (d.t === 'key' && d.k === 'Escape') { /* let the page handle it */ }
+  });
+
+  document.getElementById('back').onclick = function () {
+    history.pop();
+    var prev = history[history.length - 1] || '/';
+    go(prev, false);
+  };
+
+  [].forEach.call(document.querySelectorAll('#pill [data-mode]'), function (b) {
+    b.onclick = function () {
+      stage.dataset.mode = b.dataset.mode;
+      [].forEach.call(document.querySelectorAll('#pill [data-mode]'), function (o) {
+        o.setAttribute('aria-pressed', String(o === b));
+      });
+    };
+  });
+
+  document.getElementById('reset').onclick = function () {
+    try {
+      localStorage.removeItem('milaedia:bag:v1');
+      localStorage.removeItem('milaedia:intro-seen');
+      sessionStorage.clear();
+    } catch (e) {}
+    history = [];
+    go('/');
+  };
+  document.getElementById('hide').onclick = function () { document.body.dataset.chrome = 'off'; };
+  document.getElementById('show').onclick = function () { document.body.dataset.chrome = 'on'; };
+
+  go('/');
+})();
+</script>

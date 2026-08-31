@@ -26,8 +26,10 @@ interface Props {
   alt: string;
   model?: string | null;
   title: string;
+  /** Focal point for the shared collection crop (see lib/images focal). */
+  spot?: string;
 }
-const { image, alt, model = null, title } = Astro.props;
+const { image, alt, model = null, title, spot = '50% 50%' } = Astro.props;
 const mode = model ? 'model' : 'plate';
 ---
 <section class="viewer panel" data-viewer data-mode={mode} data-model={model ?? ''}
@@ -35,10 +37,10 @@ const mode = model ? 'model' : 'plate';
   <div class="frame" data-viewer-frame>
     <!-- plate mode: a real, inspectable surface -->
     <div class="plate" data-plate>
-      <div class="plate-inner" data-plate-inner>
+      <div class="plate-inner" data-plate-inner style={`--spot:${spot}`}>
         <Picture src={image} alt={alt}
-                 widths={[520, 900, 1400]} sizes="(max-width: 900px) 92vw, 56vw"
-                 formats={['avif']} fallbackFormat="webp" quality={72} loading="eager" />
+                 widths={[300, 420]} sizes="(max-width: 900px) 72vw, 420px"
+                 formats={['avif']} fallbackFormat="webp" quality={86} loading="eager" />
         <span class="pile" aria-hidden="true"></span>
       </div>
     </div>
@@ -89,8 +91,15 @@ const mode = model ? 'model' : 'plate';
   .frame:active { cursor: grabbing; }
 
   .plate {
+    /* Matted, not full-bleed. The verified crops are 260 px native; letting
+       them fill the frame upscaled them ~2.7x and read as soft. Held near
+       1:1 they are sharp, and the dark surround reads as the wall behind a
+       hung piece -- the same matted composition the references use. */
     position: absolute;
-    inset: 6%;
+    inset-block: 8%;
+    inset-inline: 50%;
+    inline-size: min(78%, 420px);
+    translate: -50% 0;
     transform-style: preserve-3d;
     transform:
       rotateX(var(--rx, 12deg))
@@ -108,7 +117,10 @@ const mode = model ? 'model' : 'plate';
     overflow: hidden;
     border: var(--border) solid var(--hairline);
   }
-  .plate-inner :global(img) { inline-size: 100%; block-size: 100%; object-fit: cover; }
+  .plate-inner :global(img) {
+    inline-size: 100%; block-size: 100%; object-fit: cover;
+    object-position: var(--spot, 50% 50%);
+  }
 
   /* The pile: a directional sheen that moves with the tilt, so the surface
      reads as a woven pile catching light rather than as a flat photograph.

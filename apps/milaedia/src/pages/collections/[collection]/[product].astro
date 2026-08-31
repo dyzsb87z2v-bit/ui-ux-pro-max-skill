@@ -9,7 +9,7 @@ import GhostButton from '../../../components/primitives/GhostButton.astro';
 import Section from '../../../components/primitives/Section.astro';
 import { products, formatPrice, byCollection } from '../../../data/catalogue';
 import { collections } from '../../../data/site';
-import { collectionImages } from '../../../lib/images';
+import { collectionImages, focal } from '../../../lib/images';
 import { deriveAvailability, stateTone } from '../../../lib/inventory';
 import { productSchema } from '../../../lib/seo';
 
@@ -23,6 +23,7 @@ export function getStaticPaths() {
 const { product: p } = Astro.props;
 const collection = collections.find((c) => c.slug === p.collection)!;
 const img = collectionImages[p.image];
+const spot = focal(p.id);
 
 const avail = deriveAvailability({
   mode: p.inventoryMode, stockQty: p.stockQty, reservedQty: p.reservedQty,
@@ -63,7 +64,7 @@ const specs: [string, string][] = [
 
     <div class="lede">
       <div class="visual">
-        <RugViewer image={img} alt={`${p.title} — ${p.material}`} model={p.model} title={p.title} />
+        <RugViewer image={img} alt={`${p.title} — ${p.material}`} model={p.model} title={p.title} spot={spot} />
       </div>
 
       <div class="buy">

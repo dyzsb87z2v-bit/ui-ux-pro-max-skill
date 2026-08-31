@@ -1,0 +1,10 @@
+import { chromium } from '@playwright/test';
+const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const pg = await b.newPage({ viewport: { width: 1440, height: 900 } });
+await pg.route('**fonts.g**', r => r.abort());
+await pg.goto('file:///tmp/claude-0/-home-user-ui-ux-pro-max-skill/a2f32733-7919-5e73-a972-f964cf818630/scratchpad/milaedia-site.html');
+await pg.waitForTimeout(1000);
+await pg.evaluate(() => window.postMessage({t:'nav',p:'/gallery'},'*'));
+await pg.waitForTimeout(1500);
+console.log(await pg.frames()[1].evaluate(() => [...document.images].filter(i=>i.complete&&i.naturalWidth===0).map(i=>({src:i.currentSrc.slice(0,90), out:i.outerHTML.slice(0,300)}))));
+await b.close();

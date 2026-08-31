@@ -22,3 +22,25 @@ export const collectionImages: Record<string, ImageMetadata> = {
 };
 
 export const scene = { weaver, berlin, windowTriptych, floorRug, weaverStill, rugDetail, lamp, armchair };
+
+/**
+ * Deterministic focal point for a product's art.
+ *
+ * The five collection crops are the ONLY rug imagery the references supply
+ * (260 x 360 native, title band cropped off -- see PLACEHOLDERS.md). Several
+ * pieces therefore share one source, and a fixed `object-position` made two
+ * cards in a row render as visually identical tiles.
+ *
+ * Panning the cover window to a per-product point keeps every piece visibly
+ * distinct without upscaling further and without inventing an asset: each
+ * card shows a different region of the same verified weave. Replace this
+ * whole mechanism with real per-product photography at launch.
+ */
+export function focal(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  // 22-78% keeps the window inside the crop on both axes.
+  const x = 22 + (h % 57);
+  const y = 22 + ((h >>> 8) % 57);
+  return `${x}% ${y}%`;
+}

@@ -1,0 +1,22 @@
+import { chromium } from '@playwright/test';
+const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium-1194/chrome-linux/chrome'});
+const ctx=await b.newContext({viewport:{width:1440,height:900}});
+const pg=await ctx.newPage();
+await pg.route('**fonts.g**',r=>r.abort());
+await pg.goto('file:///tmp/claude-0/-home-user-ui-ux-pro-max-skill/a2f32733-7919-5e73-a972-f964cf818630/scratchpad/milaedia-site.html');
+await pg.evaluate(()=>{try{localStorage.setItem('milaedia:intro-seen','1');sessionStorage.setItem('milaedia:intro-seen','1');}catch(e){}});
+await pg.evaluate(()=>document.getElementById('hide').click());
+const shot=async(route,file,scroll=0)=>{
+  await pg.evaluate(r=>window.postMessage({t:'nav',p:r},'*'),route);
+  await pg.waitForTimeout(1600);
+  const F=pg.frames()[1];
+  await F.evaluate(y=>window.scrollTo(0,y),scroll); await pg.waitForTimeout(900);
+  await pg.screenshot({path:file});
+};
+await shot('/home','/tmp/s-home0.png',0);
+await shot('/home','/tmp/s-home1.png',900);
+await shot('/home','/tmp/s-home2.png',2400);
+await shot('/collections','/tmp/s-coll.png',0);
+await shot('/collections/luxury-rugs/isfahan-signature','/tmp/s-prod.png',120);
+await shot('/gallery','/tmp/s-gal.png',300);
+await b.close();

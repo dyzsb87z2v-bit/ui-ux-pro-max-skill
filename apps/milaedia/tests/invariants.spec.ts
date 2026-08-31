@@ -20,6 +20,14 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     try { sessionStorage.setItem('milaedia:intro-seen', '1'); } catch { /* ignore */ }
   });
+  // Block every off-origin request. The webfont is the only one, it is not
+  // what these invariants measure, and leaving it in makes `networkidle`
+  // depend on the container's egress proxy -- which stalls the whole suite.
+  await page.route('**/*', (route) => {
+    const url = route.request().url();
+    if (url.startsWith('http://127.0.0.1:4321') || url.startsWith('data:')) return route.continue();
+    return route.abort();
+  });
 });
 
 // Every page the build serves is guarded, not just the landing page.
@@ -75,7 +83,8 @@ test.describe('invariant 1 — true low-key light', () => {
   for (const path of PAGES) {
     test(`${path}: >=40% darkest decile, <=2% above 70% luminance`, async ({ page }) => {
       await page.goto(path);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
+      await page.waitForTimeout(350);
       const px = await pixels(page);
       let dark = 0, bright = 0;
       const n = px.length / 3;
@@ -99,7 +108,8 @@ test.describe('invariant 2 — warm monochrome', () => {
   for (const path of PAGES) {
     test(`${path}: saturated pixels sit in H 20–40, twilight excepted`, async ({ page }) => {
       await page.goto(path);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
+      await page.waitForTimeout(350);
       const px = await pixels(page);
       let inRange = 0, twilight = 0, offPalette = 0;
       for (let i = 0; i < px.length; i += 3) {
@@ -253,7 +263,8 @@ test.describe('invariant 7 — the type keeps its shadow pocket', () => {
   for (const path of ['/home', '/'])
   test(`${path}: luminance behind the display type stays low under parallax`, async ({ page }) => {
     await page.goto(path);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
+      await page.waitForTimeout(350);
 
     const box = await page.locator('[data-type="display"]').first().boundingBox();
     expect(box, 'no display type found').not.toBeNull();
