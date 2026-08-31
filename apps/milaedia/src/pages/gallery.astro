@@ -38,7 +38,7 @@ const works = [
       <Divider class="gh-divider" />
     </header>
 
-    <div class="hang" data-gallery>
+    <div class="hang" data-gallery data-reveal>
       {works.map((w, i) => (
         <figure class={`work w-${w.w}`}>
           <button type="button" class="open" data-open={i} aria-label={`View larger: ${w.cap}`}>

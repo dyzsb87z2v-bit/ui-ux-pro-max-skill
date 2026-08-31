@@ -39,7 +39,7 @@ const images = {
         <Divider class="head-divider" />
       </header>
 
-      <ul class="grid" role="list">
+      <ul class="grid" role="list" data-reveal>
         {collections.map((c, i) => (
           <li><CollectionCard collection={c} images={images} eager={i < 3} /></li>
         ))}

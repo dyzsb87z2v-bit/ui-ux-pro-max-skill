@@ -41,7 +41,8 @@ img, video { display: block; max-inline-size: 100%; block-size: auto; }
    Measured: outer margin ~0.9% of canvas width, panels run
    to the edge. Compressed outside, spacious inside. */
 .frame {
-  padding-inline: var(--page-margin);
+  inline-size: min(100% - 2 * var(--page-margin), var(--page-max, 1500px));
+  margin-inline: auto;
   padding-block: var(--page-margin);
 }
 

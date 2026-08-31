@@ -1,6 +1,7 @@
 ---
 import '../styles/tokens.css';
 import '../styles/base.css';
+import '../styles/editorial.css';
 
 interface Props {
   title: string;
@@ -54,3 +55,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://example.inv
     <slot />
   </body>
 </html>
+
+<script>
+  /* One reveal observer for the whole site. Pages opt in per element with
+     [data-reveal]; pages that use none pay nothing but this import. */
+  import { initReveal, initScrollDepth } from '../lib/reveal';
+  initReveal();
+  initScrollDepth();
+</script>
