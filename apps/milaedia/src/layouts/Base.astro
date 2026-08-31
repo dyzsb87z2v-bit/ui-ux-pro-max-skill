@@ -1,6 +1,7 @@
 ---
 import '../styles/tokens.css';
 import '../styles/base.css';
+import '../styles/editorial.css';
 
 interface Props {
   title: string;
@@ -16,6 +17,8 @@ const {
   locale = 'en',
   dir = 'ltr',
 } = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://example.invalid').toString();
 ---
 <!doctype html>
 <html lang={locale} dir={dir}>
@@ -36,6 +39,11 @@ const {
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&display=swap"
     />
 
+    <link rel="canonical" href={canonical} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="MiLAEDiA" />
+    <meta name="theme-color" content="#060506" />
+    <slot name="head" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:locale" content={locale} />
@@ -47,3 +55,11 @@ const {
     <slot />
   </body>
 </html>
+
+<script>
+  /* One reveal observer for the whole site. Pages opt in per element with
+     [data-reveal]; pages that use none pay nothing but this import. */
+  import { initReveal, initScrollDepth } from '../lib/reveal';
+  initReveal();
+  initScrollDepth();
+</script>

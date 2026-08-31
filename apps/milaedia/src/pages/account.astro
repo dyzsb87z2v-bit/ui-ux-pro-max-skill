@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+import SalonHeader from '../components/hero/SalonHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import GhostButton from '../components/primitives/GhostButton.astro';
+import Divider from '../components/primitives/Divider.astro';
+---
+<Base title="Account — MiLAEDiA" description="Your acquisitions and enquiries.">
+  <SalonHeader />
+  <main id="main" class="frame acc">
+    <h1>Account</h1>
+    <Divider class="a-divider" />
+    <p class="lede">
+      Accounts are not yet enabled on this deployment. Orders and enquiries are
+      handled directly by the atelier; you will receive a reference for each.
+    </p>
+    <div class="rows" data-acc-rows></div>
+    <GhostButton href="/contact">Contact the atelier</GhostButton>
+  </main>
+  <SiteFooter />
+</Base>
+<style>
+  .acc { padding-block: clamp(2.5rem, 7vh, 5rem) clamp(4rem,10vh,8rem); max-inline-size:62ch; display:grid; gap:1.4rem; justify-items:start; }
+  h1 { margin:0; font-family: var(--font-display); font-weight:300; font-size: clamp(2.4rem,6vw,4.4rem); color:#EDE7DA; }
+  .acc :global(.a-divider) { inline-size: min(320px,60%); }
+  .lede { margin:0; font-family: var(--font-display); font-size:1.05rem; line-height:1.9; color: var(--silver); }
+  .rows { display:grid; gap:.6em; font-family: var(--font-display); font-size: var(--type-card-link); color: var(--silver); }
+</style>
+<script>
+  try {
+    const raw = sessionStorage.getItem('milaedia:last-order');
+    if (raw) {
+      const o = JSON.parse(raw);
+      document.querySelector('[data-acc-rows]')!.innerHTML =
+        `<p>Most recent reference: <strong style="color:var(--gold-hi)">${o.ref}</strong></p>`;
+    }
+  } catch {}
+</script>

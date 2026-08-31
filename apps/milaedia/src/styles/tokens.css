@@ -65,7 +65,14 @@
   /* Page margin. Measured at 0.9% of canvas width on desktop.
      §09: below 640px this must grow to ~4.5% — a deliberate,
      recorded inversion of the compressed-outside rhythm. */
-  --page-margin: clamp(10px, 0.9vw, 17px);
+  /* The second reference measures ONE left margin shared by every element:
+     60px in a 1536 frame = 3.91%. The old 17px came from the first
+     reference's dense plate composition and left the interior pages sitting
+     tight against the edge while the homepage breathed. */
+  --page-margin: clamp(20px, 3.91vw, 60px);
+  /* Editorial measure. Without it the interior pages stretch to 2560px and
+     the line length collapses the design. */
+  --page-max: 1500px;
 
   /* ---- geometry ------------------------------------------- */
   --radius:       clamp(8px, 0.79vw, 14px);
@@ -127,7 +134,7 @@
 /* ---- mobile: the one recorded deviation from the measured
    spacing rhythm. Page margin grows from 0.9% to ~4.5%. ---- */
 @media (max-width: 640px) {
-  :root { --page-margin: 4.5vw; }
+  :root { --page-margin: 5.2vw; }
 }
 
 /* ============================================================

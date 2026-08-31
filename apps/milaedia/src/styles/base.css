@@ -7,6 +7,11 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
+  /* Sideways scroll is stopped at the root. `body { overflow-x: hidden }`
+     alone did not: the perspective stages put the overflow on <html>, and
+     /custom measured 8px of real sideways scroll. `clip` creates no scroll
+     container, unlike `hidden`. */
+  overflow-x: clip;
   background: var(--ground);
   color-scheme: dark;
   -webkit-text-size-adjust: 100%;
@@ -36,7 +41,8 @@ img, video { display: block; max-inline-size: 100%; block-size: auto; }
    Measured: outer margin ~0.9% of canvas width, panels run
    to the edge. Compressed outside, spacious inside. */
 .frame {
-  padding-inline: var(--page-margin);
+  inline-size: min(100% - 2 * var(--page-margin), var(--page-max, 1500px));
+  margin-inline: auto;
   padding-block: var(--page-margin);
 }
 
@@ -52,6 +58,15 @@ img, video { display: block; max-inline-size: 100%; block-size: auto; }
 }
 
 /* ---- type helpers ---------------------------------------- */
+
+/* `data-uppercase` marks the type the reference sets in caps. It was applied
+   in 30 files but never defined -- the only rule naming it was the RTL
+   override in tokens.css, which made that override dead code too. Components
+   that also set text-transform in their own scoped styles are unaffected. */
+[data-uppercase] {
+  text-transform: uppercase;
+}
+
 .u-caps {
   text-transform: uppercase;
   font-variant-numeric: lining-nums tabular-nums;

@@ -1,0 +1,51 @@
+---
+/**
+ * Tagline — the measured brand line, with its narrow-viewport variant.
+ *
+ * Wide: the run-on sentence, as measured in the composite hero
+ *       ("PERSIAN HERITAGE. EUROPEAN VISION. WORLDWIDE.", cap 8px,
+ *       tracking ~0.18em, nowrap).
+ * Narrow: the measured THREE-LINE DESCRIPTOR from the nav plate
+ *       (cap 7px, line pitch 15–16px, leading 2.2x) rather than letting a
+ *       44-character sentence wrap raggedly. Both forms are in the reference.
+ *
+ * The run-on stays in the accessibility tree at every width, so the page
+ * always exposes one canonical brand line.
+ */
+import { brand } from '../../data/site';
+interface Props { class?: string }
+const { class: cls = '' } = Astro.props;
+---
+<p class={`tagline ${cls}`} data-type="tagline" data-uppercase>
+  <span class="run">{brand.tagline}</span>
+  <span class="stack" aria-hidden="true">
+    {brand.descriptor.map((line) => <span>{line}</span>)}
+  </span>
+</p>
+
+<style>
+  .tagline {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--type-tagline);
+    letter-spacing: var(--track-tagline);
+    color: var(--silver-hi);
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .run { white-space: nowrap; }
+  .stack { display: none; }
+
+  @media (max-width: 640px) {
+    .run {
+      position: absolute; inline-size: 1px; block-size: 1px;
+      overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    }
+    .stack {
+      display: grid;
+      gap: 0.55em;
+      letter-spacing: 0.14em;
+      line-height: var(--leading-descriptor);
+    }
+  }
+</style>

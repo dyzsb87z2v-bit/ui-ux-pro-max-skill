@@ -1,0 +1,84 @@
+---
+import Wordmark from './primitives/Wordmark.astro';
+import Ornament from './primitives/Ornament.astro';
+import { brand, nav } from '../data/site';
+const year = new Date().getFullYear();
+---
+<footer class="foot frame">
+  <div class="inner panel">
+    <div class="brandcol">
+      <Ornament variant="lozenge" size="2.1em" class="foot-mark" />
+      <Wordmark as="span" class="foot-word" bloom={false} />
+      <p class="desc" data-uppercase>{brand.descriptor.join(' · ')}</p>
+    </div>
+
+    <nav class="cols" aria-label="Footer">
+      <div>
+        <h2>House</h2>
+        <ul>{nav.filter(n => n.href !== '/').map(n => <li><a href={n.href}>{n.label}</a></li>)}</ul>
+      </div>
+      <div>
+        <h2>Atelier</h2>
+        <ul>
+          <li><a href="/custom">Bespoke commissions</a></li>
+          <li><a href="/gallery">Gallery</a></li>
+          <li><a href="/search">Search</a></li>
+          <li><a href="/bag">Bag</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Legal</h2>
+        <ul>
+          <li><a href="/legal/impressum">Impressum</a></li>
+          <li><a href="/legal/datenschutz">Datenschutz</a></li>
+          <li><a href="/legal/agb">AGB</a></li>
+          <li><a href="/legal/widerruf">Widerrufsbelehrung</a></li>
+          <li><a href="/legal/shipping">Shipping &amp; Returns</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <p class="rule">
+    <span>&copy; {year} MiLAEDiA</span>
+    <span aria-hidden="true">&#10022;</span>
+    <span>{brand.cities.join(' · ')}</span>
+  </p>
+</footer>
+
+<style>
+  .foot { padding-block: clamp(3rem, 8vh, 6rem) clamp(1.5rem, 4vh, 3rem); }
+  .inner {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: clamp(2rem, 6vw, 5rem);
+    padding: clamp(1.6rem, 4vw, 3rem);
+  }
+  .brandcol { display: grid; justify-items: start; gap: 0.7em; align-content: start; }
+  .brandcol :global(.foot-mark) { color: var(--gold); }
+  .brandcol :global(.foot-word) { font-size: var(--type-plate); }
+  .desc {
+    margin: 0; font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-nav); text-transform: uppercase; color: var(--silver); opacity: .65;
+  }
+  .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1.5rem, 4vw, 3rem); }
+  .cols h2 {
+    margin: 0 0 1em; font-family: var(--font-display); font-weight: 400;
+    font-size: var(--type-descriptor); letter-spacing: var(--track-cities);
+    text-transform: uppercase; color: var(--bronze);
+  }
+  .cols ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .7em; }
+  .cols a {
+    font-family: var(--font-display); font-size: var(--type-card-link);
+    color: var(--silver); text-decoration: none; letter-spacing: .03em;
+  }
+  .cols a:hover, .cols a:focus-visible { color: var(--gold-hi); }
+  .rule {
+    display: flex; gap: 1.2em; justify-content: center; align-items: center; flex-wrap: wrap;
+    margin: clamp(1.5rem, 4vh, 2.5rem) 0 0;
+    font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-nav); text-transform: uppercase; color: var(--silver); opacity: .5;
+  }
+  .rule span[aria-hidden] { color: var(--gold); }
+  @media (max-width: 900px) { .inner { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) { .cols { grid-template-columns: 1fr 1fr; } }
+</style>

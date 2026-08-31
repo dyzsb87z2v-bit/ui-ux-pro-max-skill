@@ -1,0 +1,270 @@
+---
+/**
+ * AtelierScene — the 3D cinematic composition.
+ *
+ * NOT the reference video played as a background. The reference was decoded,
+ * the text-free region containing the weaver and her rug was extracted
+ * (x 845–1110, y 55–662 of the .mov), and that clip is staged as ONE plane
+ * inside a layered perspective composition. Everything baked into the
+ * reference — wordmark, tagline, sub-line, CTA, unrelated chrome — sits
+ * outside the crop and never ships.
+ *
+ * The subject is the RUG AND THE WEAVING. The woman is present as the maker,
+ * held to the lower-right of her own panel and never enlarged past the rug
+ * she is working. That ordering is measured, not stylistic (Forensics §09).
+ *
+ * Depth stack, back to front:
+ *   d=4  wall rug plate      — the atelier ground, deepest, moves least
+ *   d=3  floor rug in perspective (rotateX) — the physical plane
+ *   d=2  the weaving panel   — the only moving image
+ *   d=1  hairline frame + light sweep — nearest, moves most
+ *
+ * Perspective is real (CSS 3D, translateZ + rotate), not a parallax fake.
+ * No WebGL: there is no 3D geometry to render and no model to load, so a
+ * renderer would cost ~600 KB for planes the compositor already draws on the
+ * GPU. When real rug models exist, RugViewer (see /lib/viewer) is where they
+ * mount — this scene stays as it is.
+ */
+import { Picture } from 'astro:assets';
+import wallRug from '../assets/scene/contact-texture.png';
+import floorRug from '../assets/atelier/floor-rug.png';
+
+interface Props {
+  /** 'hero' sits in the composition's craft zone; 'intro' fills the threshold. */
+  variant?: 'hero' | 'intro';
+  class?: string;
+}
+const { variant = 'hero', class: cls = '' } = Astro.props;
+---
+<div class={`atelier atelier-${variant} ${cls}`} data-atelier data-variant={variant}>
+  <div class="stage" data-depth-stage>
+    <!-- d=4 — the atelier wall. Deepest, dimmest, moves least. -->
+    <div class="plane plane-wall" data-depth="4">
+      <Picture src={wallRug} alt="" widths={[360, 720]} sizes="40vw"
+               formats={['avif']} fallbackFormat="webp" quality={58} loading="lazy" />
+    </div>
+
+    <!-- d=3 — the floor, laid back in real perspective. -->
+    <div class="plane plane-floor" data-depth="3">
+      <Picture src={floorRug} alt="" widths={[460, 910]} sizes="46vw"
+               formats={['avif']} fallbackFormat="webp" quality={60} loading="lazy" />
+    </div>
+
+    <!-- d=2 — the weaving. The only moving element in the composition. -->
+    <figure class="plane plane-weave" data-depth="2">
+      <video
+        data-atelier-video
+        muted playsinline loop preload="none"
+        poster="/media/atelier-weaver-poster.jpg"
+        aria-label="A weaver at work on a Persian rug"
+      ></video>
+      <figcaption class="visually-hidden">
+        A weaver working at the loom on a handmade Persian rug.
+      </figcaption>
+      <span class="sheen" aria-hidden="true"></span>
+    </figure>
+
+    <!-- d=1 — nearest. Hairline frame only; the system has no other chrome. -->
+    <div class="plane plane-frame" data-depth="1" aria-hidden="true"></div>
+  </div>
+</div>
+
+<style>
+  .atelier {
+    position: relative;
+    /* Clipped, like the hero stage: the planes are deliberately overscanned
+       so parallax never reveals an edge, and without this they escape and
+       push the page sideways. */
+    overflow: clip;
+    /* Real perspective. The stage is a room seen from a fixed eye. */
+    perspective: 1400px;
+    perspective-origin: 62% 44%;
+    isolation: isolate;
+    /* The scene dissolves into the page ground rather than ending on a
+       rectangle. The measured system has no card edges. */
+    mask-image: radial-gradient(128% 118% at 62% 46%, #000 46%, transparent 97%);
+  }
+
+  .stage {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    /* Camera yaw/pitch are written by the depth engine; both default to 0 so
+       the composition is correct with no JS at all. */
+    transform: rotateY(var(--cam-yaw, 0deg)) rotateX(var(--cam-pitch, 0deg));
+    transition: transform 600ms var(--ease-cinematic);
+  }
+
+  .plane {
+    position: absolute;
+    will-change: transform;
+    /* --dx/--dy are written by the depth engine; each plane composes them
+       with its OWN 3D placement so parallax never flattens the scene. */
+    --dx: 0px;
+    --dy: 0px;
+  }
+
+  /* --- d=4 wall ------------------------------------------------------- */
+  .plane-wall {
+    inset-block: -6% 30%;
+    inset-inline: 6% -4%;
+    transform: translate3d(var(--dx), var(--dy), 0) translateZ(-220px);
+    opacity: 0.46;
+    /* Feathered on every edge — a hard rectangle reads as a pasted card,
+       not as a wall receding into a room. */
+    mask-image: radial-gradient(125% 108% at 62% 34%, #000 34%, transparent 92%);
+  }
+  .plane-wall :global(img) { inline-size: 100%; block-size: 100%; object-fit: cover; }
+
+  /* --- d=3 floor, laid back in perspective ---------------------------- */
+  .plane-floor {
+    inset-block-end: 4%;
+    inset-inline: 2% 2%;
+    block-size: 32%;
+    transform: translate3d(var(--dx), var(--dy), 0) translateZ(-90px) rotateX(58deg);
+    transform-origin: 50% 100%;
+    opacity: 0.66;
+    /* Feathered so the receding plane dissolves instead of ending on a
+       trapezoid edge — the reference floor has no visible boundary either. */
+    mask-image: radial-gradient(120% 150% at 50% 100%, #000 22%, transparent 88%);
+  }
+  .plane-floor :global(img) { inline-size: 100%; block-size: 100%; object-fit: cover; }
+
+  /* --- d=2 the weaving panel ------------------------------------------ */
+  .plane-weave {
+    margin: 0;
+    inset-block: 10% 20%;
+    inset-inline-end: 10%;
+    inline-size: 44%;
+    transform: translate3d(var(--dx), var(--dy), 0);
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    /* Hairline only. The system has no shadows and no elevated cards. */
+    border: var(--border) solid var(--hairline);
+    background: var(--panel);
+  }
+  .plane-weave video,
+  .plane-weave::after { display: block; inline-size: 100%; block-size: 100%; }
+  .plane-weave video { object-fit: cover; }
+
+  /* Poster shows until the clip is fetched, so the panel is never empty. */
+  .plane-weave video:not([src]) {
+    background: var(--panel) center/cover no-repeat url('/media/atelier-weaver-poster.jpg');
+  }
+
+  /* A single slow light pass across the silk. Not a glow — a sweep, at the
+     amplitude the reference's own highlights permit (<2% above 70% L). */
+  .sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      104deg,
+      transparent 38%,
+      rgba(231, 202, 156, 0.085) 50%,
+      transparent 62%
+    );
+    background-size: 260% 100%;
+    background-position: 130% 0;
+    animation: sheen 13s var(--ease-cinematic) infinite;
+  }
+  @keyframes sheen {
+    0%, 62% { background-position: 130% 0; }
+    100%    { background-position: -30% 0; }
+  }
+
+  /* --- d=1 nearest: the frame ----------------------------------------- */
+  .plane-frame {
+    inset: 4%;
+    transform: translate3d(var(--dx), var(--dy), 0) translateZ(60px);
+    border: var(--border) solid var(--hairline-soft);
+    border-radius: var(--radius);
+    opacity: 0.4;
+  }
+  /* The hero variant is part of a larger composition, not a framed object. */
+  .atelier-hero .plane-frame { display: none; }
+
+  /* --- entry: the measured envelope ------------------------------------
+     hold 0.5s -> ease-in 1.5s -> plateau -> ease-out -> settle. The scene
+     arrives from slightly further away and comes to rest, matching the
+     reference clip's own motion curve. */
+  /* The entry animates the CONTAINER, never .stage — .stage carries the
+     camera, and an `animation-fill-mode: both` on the same property would
+     pin the camera at its final keyframe and kill the parallax. */
+  .atelier {
+    animation: atelier-in 4200ms var(--ease-cinematic) 400ms both;
+  }
+  @keyframes atelier-in {
+    from { opacity: 0; transform: scale(1.05); }
+    26%  { opacity: 1; }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* --- static fallback -------------------------------------------------
+     reduced motion, save-data or a low-power device: a correct, still
+     composition. Not a degraded one. */
+  .atelier[data-depth-static] .sheen { animation: none; opacity: 0.4; }
+  @media (prefers-reduced-motion: reduce) {
+    .atelier, .sheen { animation: none !important; }
+    .stage { transition: none !important; }
+  }
+
+  /* --- intro variant: fills the threshold ------------------------------ */
+  .atelier-intro { block-size: 100%; perspective: 1700px; }
+  .atelier-intro .plane-weave {
+    inset-block: 6% 10%; inset-inline-end: 50%;
+    transform: translate3d(var(--dx), var(--dy), 0) translateX(50%);
+    inline-size: min(40%, 42vh);
+  }
+  .atelier-intro .plane-wall { inset-inline: 6% 6%; opacity: 0.38; }
+
+  /* --- narrow viewports -------------------------------------------------
+     Fewer planes, no perspective rotation, no video on the smallest screens
+     (the poster still carries the image). */
+  @media (max-width: 900px) {
+    .atelier { perspective: 1000px; }
+    .plane-frame { display: none; }
+    .plane-wall { opacity: 0.4; }
+  }
+  @media (max-width: 640px) {
+    .atelier { perspective: none; }
+    .stage { transform: none; }
+    .plane-floor { display: none; }
+    .plane-weave { inset-block: 4% 6%; inset-inline-end: 4%; inline-size: 56%; }
+  }
+</style>
+
+<script>
+  import { initDepth, prefersLessMotion } from '../lib/depth';
+
+  for (const stage of document.querySelectorAll<HTMLElement>('[data-depth-stage]')) {
+    initDepth(stage, { maxShift: 16, maxTilt: 2.4, drift: 5 });
+    stage.closest('[data-atelier]')?.toggleAttribute('data-depth-static', prefersLessMotion());
+  }
+
+  /**
+   * The clip is fetched only when the scene is on screen, and never on a
+   * narrow viewport, a metered connection or a reduced-motion preference —
+   * the poster carries the image in those cases.
+   */
+  const wantsVideo = () =>
+    !prefersLessMotion() && !window.matchMedia('(max-width: 640px)').matches;
+
+  const pickSrc = () =>
+    window.matchMedia('(max-width: 1100px)').matches
+      ? '/media/atelier-weaver-sm.mp4'
+      : '/media/atelier-weaver.mp4';
+
+  for (const video of document.querySelectorAll<HTMLVideoElement>('[data-atelier-video]')) {
+    if (!wantsVideo()) continue;
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) { video.pause(); return; }
+      if (!video.getAttribute('src')) {
+        video.setAttribute('src', pickSrc());
+        video.load();
+      }
+      video.play().catch(() => { /* never block the composition */ });
+    }, { rootMargin: '15%' });
+    io.observe(video);
+  }
+</script>

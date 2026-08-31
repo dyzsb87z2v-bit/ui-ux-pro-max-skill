@@ -1,0 +1,337 @@
+---
+/**
+ * SalonHero — the new first screen.
+ *
+ * Every value here is MEASURED from the supplied reference (1536x1024), not
+ * chosen. Reference geometry, expressed as fractions of the frame so it
+ * scales rather than pinning to one width:
+ *
+ *   header band        94px          =  9.18% of height
+ *   left margin        60px          =  3.91% of width  (identical on EVERY element)
+ *   wordmark           cap 67px      =  6.12vw
+ *   eyebrow            cap 15px      =  1.24vw, widest tracking on the page
+ *   SILK TAPESTRIES    cap 32px      =  3.00vw
+ *   rule               150 x 2px     =  9.77% of width
+ *   tagline lines      cap 34/31px   =  2.86vw
+ *   CTA pair           263x57 and 253x57, 26px apart
+ *
+ * Colours were sampled from the reference and matched against the existing
+ * token set: the CTA fill measured #A4743A against --gold-scene #A97342
+ * (distance 9.5), the sub-head #B6A388 against --gold #B2A589 (distance 4.6).
+ * The palette is unchanged — this is a re-layout, not a re-brand.
+ *
+ * The photograph is 1264x848, the only clean plate supplied. It is never
+ * upscaled past ~1.5x; see PLACEHOLDERS.md.
+ */
+import { Picture } from 'astro:assets';
+import salon from '../../assets/hero/salon-clean.jpg';
+import Ornament from '../primitives/Ornament.astro';
+
+interface Props { eyebrow?: string; lead?: string; tail?: string }
+const {
+  eyebrow = 'Antique \u2022 Handwoven Silk \u2022 Luxury',
+  lead = 'Timeless Beauty.',
+  tail = 'Heritage in Every Knot.',
+} = Astro.props;
+---
+<section class="salon" aria-labelledby="salon-title" data-depth-stage data-salon>
+  {/* Four real planes at four depths. The photograph is a single flat image,
+      so nothing here pretends to have separated its foreground from its
+      background — that would need mattes this plate cannot yield. The depth
+      is between the photograph, the scrim and the type, which ARE separable,
+      and it is the same engine the atelier scene uses: one rAF loop, custom
+      properties only, no library. */}
+  <div class="plate" aria-hidden="true" data-depth="4">
+    <Picture
+      src={salon} alt="" widths={[760, 1264]} sizes="100vw"
+      formats={['avif']} fallbackFormat="webp" quality={80} loading="eager"
+    />
+  </div>
+  {/* Scrim, not decoration: the reference's left third measures median
+      luminance 9.5 while the right side reaches 90+. On narrow viewports the
+      type crosses into the bright half, so the scrim steepens there. */}
+  <div class="scrim" aria-hidden="true" data-depth="3"></div>
+
+  <div class="copy" data-depth="2">
+    <h1 id="salon-title" class="wordmark" data-type="display" data-depth="1">MiLAEDiA</h1>
+    <p class="eyebrow" data-type="tagline" data-uppercase>{eyebrow}</p>
+    <p class="kind" data-uppercase>Silk Tapestries</p>
+
+    <span class="rule" aria-hidden="true"></span>
+
+    <p class="lede"><span>{lead}</span><span>{tail}</span></p>
+
+    <div class="acts">
+      <a class="cta cta-solid" href="/collections">
+        <span>Explore Collection</span>
+        <svg viewBox="0 0 24 12" aria-hidden="true" focusable="false">
+          <path d="M0 6h21M16 1l5 5-5 5" fill="none" stroke="currentColor"
+                stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </a>
+      <a class="cta cta-ghost" href="/custom">Private Consultation</a>
+    </div>
+
+    <p class="place">
+      <Ornament variant="medallion" size="1.9em" class="place-mark" />
+      <span>Berlin-based. Persian heritage. Worldwide.</span>
+    </p>
+  </div>
+</section>
+
+<style>
+  .salon {
+    position: relative;
+    min-block-size: calc(100svh - var(--band-h, 94px));
+    display: grid;
+    align-items: center;
+    overflow: clip;
+    background: var(--ground);
+    isolation: isolate;
+
+    /* The camera. 2200px is a long lens: depth reads as separation, never as
+       a fish-eye. Yaw/pitch come from the shared engine and are capped at
+       ~2 degrees, so nothing swings. */
+    perspective: 2200px;
+    perspective-origin: 30% 50%;
+    transform-style: preserve-3d;
+    transform: rotateY(var(--cam-yaw, 0deg)) rotateX(var(--cam-pitch, 0deg));
+  }
+
+  /* Every plane composes the engine's --dx/--dy with its OWN translateZ.
+     Writing `transform` from JS instead would wipe the Z placement — that is
+     why the engine only ever writes custom properties. */
+  .plate,
+  .scrim,
+  .copy,
+  .wordmark { will-change: transform; }
+
+  .plate {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    transform: translate3d(var(--dx, 0), var(--dy, 0), -90px) scale(1.11);
+  }
+  .plate :global(img) {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: 62% 50%;
+  }
+
+  .scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    transform: translate3d(var(--dx, 0), var(--dy, 0), -52px) scale(1.06);
+    background:
+      linear-gradient(90deg, rgba(0,0,0,.86) 0%, rgba(0,0,0,.62) 26%,
+                             rgba(0,0,0,.18) 52%, rgba(0,0,0,0) 72%),
+      linear-gradient(0deg,  rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 34%);
+  }
+
+  .copy {
+    /* 60/1536 = 3.91% — the reference uses one left margin for everything */
+    --gutter: clamp(20px, 3.91vw, 60px);
+    position: relative;
+    z-index: 2;
+    display: grid;
+    justify-items: start;
+    padding-inline: var(--gutter);
+    padding-block: clamp(2rem, 6vh, 5rem);
+    transform: translate3d(var(--dx, 0), var(--dy, 0), 0);
+    transform-style: preserve-3d;
+  }
+
+  /* ---- wordmark: cap 67px at 1536 = 6.12vw ---- */
+  .wordmark {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(2.9rem, 6.12vw, 6rem);
+    line-height: 0.98;
+    letter-spacing: 0.012em;
+    color: var(--gold-hi);
+    background: var(--wordmark-grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-wrap: nowrap;
+    /* the only element that leaves the copy plane, and only by 26px */
+    transform: translate3d(var(--dx, 0), var(--dy, 0), 26px);
+  }
+
+  /* ---- eyebrow: cap 15px = 1.24vw ---- */
+  .eyebrow {
+    margin: clamp(0.5rem, 1.5vh, 0.95rem) 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(0.62rem, 1.24vw, 1.18rem);
+    letter-spacing: 0.22em;
+    color: var(--silver-hi);
+  }
+
+  /* ---- SILK TAPESTRIES: cap 32px = 3.0vw ---- */
+  .kind {
+    margin: clamp(0.5rem, 1.4vh, 0.9rem) 0 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.5rem, 3.0vw, 2.95rem);
+    letter-spacing: 0.10em;
+    line-height: 1;
+    color: var(--gold);
+  }
+
+  /* ---- rule: 150/1536 = 9.77% wide, 2px tall ---- */
+  .rule {
+    display: block;
+    inline-size: clamp(96px, 9.77vw, 150px);
+    block-size: 2px;
+    margin-block: clamp(1.1rem, 3.7vh, 2.4rem);
+    background: linear-gradient(90deg, var(--gold) 0%, rgba(190,170,146,0) 100%);
+  }
+
+  /* ---- tagline: cap 34px = 2.86vw, set as two lines ---- */
+  .lede {
+    display: grid;
+    gap: 0.06em;
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: clamp(1.35rem, 2.86vw, 2.8rem);
+    line-height: 1.16;
+    color: var(--gold);
+    text-wrap: balance;
+  }
+
+  /* ---- CTAs: 263x57 and 253x57, 26px apart ---- */
+  .acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(12px, 1.7vw, 26px);
+    margin-block-start: clamp(1.5rem, 3.9vh, 2.6rem);
+  }
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8em;
+    min-block-size: clamp(46px, 5.6vh, 57px);
+    padding-inline: clamp(0.95rem, 1.45vw, 1.4rem);
+    font-family: var(--font-display);
+    font-size: clamp(0.7rem, 0.98vw, 0.94rem);
+    letter-spacing: var(--track-cta);
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transform: translateZ(0);
+    transition:
+      background-color 320ms var(--ease-cinematic),
+      border-color 320ms var(--ease-cinematic),
+      color 320ms var(--ease-cinematic),
+      transform 320ms var(--ease-cinematic),
+      box-shadow 320ms var(--ease-cinematic);
+  }
+  .cta:hover, .cta:focus-visible {
+    transform: translate3d(0, -2px, 14px);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
+  }
+  .cta svg { inline-size: 1.5em; block-size: auto; flex: 0 0 auto; }
+
+  /* measured fill #A4743A == --gold-scene; label #FDEAC2 */
+  .cta-solid {
+    background: var(--gold-scene);
+    color: #FDEAC2;
+    border: 1px solid var(--gold-scene);
+  }
+  .cta-solid:hover,
+  .cta-solid:focus-visible { background: #B9843F; border-color: #B9843F; }
+
+  /* measured: near-black interior, silver label, hairline border */
+  .cta-ghost {
+    background: rgba(10, 8, 6, 0.42);
+    color: var(--silver-hi);
+    border: 1px solid var(--hairline);
+    backdrop-filter: blur(2px);
+  }
+  .cta-ghost:hover,
+  .cta-ghost:focus-visible { border-color: var(--gold); color: var(--gold-hi); }
+
+  .cta:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 3px; }
+
+  .place {
+    display: grid;
+    gap: 0.55em;
+    justify-items: start;
+    margin: clamp(1.6rem, 4vh, 2.6rem) 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(0.66rem, 0.92vw, 0.9rem);
+    letter-spacing: 0.04em;
+    color: var(--silver-hi);
+  }
+  .place :global(.place-mark) { color: var(--gold-hi); }
+
+  /* ---- narrow viewports: an intentional layout, not a squeezed desktop ---- */
+  @media (max-width: 900px) {
+    /* The rug IS the product; it cannot be scrimmed away. Two stacked
+       gradients multiplied to ~92% black here and erased the room, so this is
+       ONE gradient, weighted to the band the type occupies and clearing over
+       the lower half where the floor rug reads. */
+    .plate :global(img) { object-position: 58% 40%; }
+    .scrim {
+      background: linear-gradient(
+        180deg,
+        rgba(0,0,0,.78) 0%,
+        rgba(0,0,0,.66) 38%,
+        rgba(0,0,0,.34) 58%,
+        rgba(0,0,0,.20) 74%,
+        rgba(0,0,0,.66) 100%
+      );
+    }
+    /* Type sits in the upper band rather than dead-centre, which left a large
+       empty pocket under the place line at 390px. */
+    .salon { align-items: start; }
+    .copy { padding-block-start: clamp(2.5rem, 9vh, 5rem); }
+    .wordmark { font-size: clamp(2.6rem, 12.5vw, 4.4rem); }
+    .eyebrow  { font-size: clamp(0.6rem, 2.5vw, 0.86rem); letter-spacing: 0.18em; }
+    .kind     { font-size: clamp(1.35rem, 5.6vw, 2rem); }
+    .lede     { font-size: clamp(1.3rem, 5.2vw, 2rem); }
+  }
+  @media (max-width: 560px) {
+    .acts { inline-size: 100%; gap: 10px; }
+    .cta  { inline-size: 100%; }
+  }
+  /* The engine stamps this when it bails -- reduced motion, Save-Data, or a
+     coarse low-memory device. The composition must stay correct without it. */
+  .salon[data-depth-static] { perspective: none; transform: none; }
+  .salon[data-depth-static] .plate,
+  .salon[data-depth-static] .scrim,
+  .salon[data-depth-static] .copy,
+  .salon[data-depth-static] .wordmark { transform: none; }
+  .salon[data-depth-static] .plate { scale: 1.02; }
+
+  /* Mobile is not a scaled-down desktop: the 3D is removed, not reduced.
+     A phone gains nothing from a 2-degree camera it cannot point. */
+  @media (max-width: 900px) {
+    .salon { perspective: none; transform: none; }
+    .plate, .scrim, .copy, .wordmark { transform: none; will-change: auto; }
+    .plate { scale: 1.02; }
+    .cta:hover, .cta:focus-visible { transform: none; box-shadow: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cta { transition: none; }
+    .salon { perspective: none; transform: none; }
+    .plate, .scrim, .copy, .wordmark { transform: none; }
+  }
+</style>
+
+<script>
+  import { initDepth, prefersLessMotion } from '../../lib/depth';
+
+  for (const stage of document.querySelectorAll<HTMLElement>('[data-salon]')) {
+    // Gentler than the atelier scene: this is a first screen a visitor reads,
+    // not a set piece they watch. 12px of travel and ~1.6 degrees of camera.
+    initDepth(stage, { maxShift: 12, maxTilt: 1.6, drift: 4 });
+    if (prefersLessMotion()) stage.setAttribute('data-depth-static', '');
+  }
+</script>

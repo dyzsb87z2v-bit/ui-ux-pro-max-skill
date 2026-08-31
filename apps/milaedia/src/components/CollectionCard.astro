@@ -1,0 +1,150 @@
+---
+/**
+ * CollectionCard — measured anatomy (Forensics §13 / Spec §16).
+ *
+ *   2:3 (118x180 @1143) · 1px gold hairline · radius ~7px
+ *   image 70% of card height, then GRADIENT-DISSOLVED into black —
+ *     there is no hard edge between image and text zone
+ *   image -> title 12px · title -> link 14px · bottom padding 7–13px
+ *   title  cool silver, uppercase, tracking 0.06em
+ *   link   "Discover ›" warm gold, sentence case
+ *
+ * Three things that separate this from a stock card, all measured:
+ *   1. The text block is BOTTOM-ANCHORED. A one-line title sits on the same
+ *      baseline as the second line of a two-line title, so "Discover" holds a
+ *      fixed baseline across the row.
+ *   2. Temperature duality inside one card — cool title, warm link.
+ *   3. No shadow and no black overlay. Legibility comes from the image's own
+ *      dissolve.
+ *
+ * The 3D tilt is deliberately small (max 4deg) and pointer-only. It reads as
+ * a plate catching the light, not as a toy. Touch and reduced-motion get the
+ * static card, which is the reference exactly.
+ */
+import { Picture } from 'astro:assets';
+import type { Collection } from '../data/site';
+
+interface Props { collection: Collection; images: Record<string, ImageMetadata>; eager?: boolean }
+const { collection, images, eager = false } = Astro.props;
+const img = images[collection.slug];
+---
+<a class="card" href={`/collections/${collection.slug}`} data-tilt>
+  <span class="art" aria-hidden="true">
+    <Picture
+      src={img} alt=""
+      widths={[260, 520]} sizes="(max-width: 640px) 46vw, 20vw"
+      formats={['avif']} fallbackFormat="webp" quality={62}
+      loading={eager ? 'eager' : 'lazy'}
+    />
+  </span>
+
+  <span class="text">
+    <span class="title" data-uppercase>{collection.title}</span>
+    <span class="link">Discover <span class="chev" aria-hidden="true">&rsaquo;</span></span>
+  </span>
+</a>
+
+<style>
+  .card {
+    position: relative;
+    display: block;
+    aspect-ratio: 2 / 3;
+    border: var(--border) solid var(--hairline);
+    border-radius: var(--radius-card);
+    background: var(--ground);
+    overflow: hidden;
+    text-decoration: none;
+    /* Without this the <a> falls back to the UA link colour — a blue that is
+       nowhere in the measured palette. Invariant 6 caught it. */
+    color: var(--silver);
+    isolation: isolate;
+    transform-style: preserve-3d;
+    transform: perspective(900px)
+               rotateY(var(--ty, 0deg))
+               rotateX(var(--tx, 0deg));
+    transition: transform 520ms var(--ease-cinematic),
+                border-color 320ms var(--ease-cinematic);
+  }
+  .card:hover, .card:focus-visible { border-color: var(--gold); }
+
+  /* Image occupies the top ~70% and DISSOLVES — no hard edge, no overlay. */
+  .art {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    block-size: 78%;
+    display: block;
+    mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+    transform: translateZ(18px) scale(var(--art-scale, 1));
+    transition: transform 620ms var(--ease-cinematic);
+  }
+  .art :global(img) { inline-size: 100%; block-size: 100%; object-fit: cover; }
+  .card:hover .art { --art-scale: 1.035; }
+
+  /* Bottom-anchored, so "Discover" holds one baseline across the whole row. */
+  .text {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    display: grid;
+    justify-items: center;
+    gap: 0.85em;
+    padding: 0 0.7em 1.15em;
+    transform: translateZ(34px);
+  }
+
+  .title {
+    font-family: var(--font-display);
+    font-size: var(--type-card-title);
+    letter-spacing: var(--track-card);
+    text-transform: uppercase;
+    color: var(--silver-hi);          /* cool: label */
+    line-height: 1.25;
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .link {
+    font-family: var(--font-display);
+    font-size: var(--type-card-link);
+    color: var(--gold);                /* warm: interactive */
+    letter-spacing: 0.03em;
+    line-height: 1;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4em;
+  }
+  /* Logical, so the chevron flips with direction in RTL. */
+  .chev { transition: transform 320ms var(--ease-cinematic); }
+  .card:hover .chev { transform: translateX(0.22em); }
+  :global([dir='rtl']) .chev { transform: scaleX(-1); }
+  :global([dir='rtl']) .card:hover .chev { transform: scaleX(-1) translateX(0.22em); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card, .art, .chev { transition: none; }
+  }
+</style>
+
+<script>
+  import { prefersLessMotion } from '../lib/depth';
+
+  // Pointer-only, small, and eased. Touch devices get the static card.
+  if (!prefersLessMotion() && window.matchMedia('(pointer: fine)').matches) {
+    const MAX = 4; // degrees — a plate catching light, not a toy
+    for (const card of document.querySelectorAll<HTMLElement>('[data-tilt]')) {
+      card.addEventListener('pointermove', (e) => {
+        const r = card.getBoundingClientRect();
+        const nx = ((e.clientX - r.left) / r.width) * 2 - 1;
+        const ny = ((e.clientY - r.top) / r.height) * 2 - 1;
+        card.style.setProperty('--ty', `${(nx * MAX).toFixed(2)}deg`);
+        card.style.setProperty('--tx', `${(-ny * MAX * 0.7).toFixed(2)}deg`);
+      }, { passive: true });
+      const rest = () => {
+        card.style.setProperty('--ty', '0deg');
+        card.style.setProperty('--tx', '0deg');
+      };
+      card.addEventListener('pointerleave', rest, { passive: true });
+      card.addEventListener('blur', rest);
+    }
+  }
+</script>
