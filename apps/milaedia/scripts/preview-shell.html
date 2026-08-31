@@ -104,8 +104,13 @@
 (function () {
   var P = /*__PAYLOAD__*/null;
 
-  // JS chunks call this for /media/* so large binaries are stored once.
-  window.__res = function (p) { return P.media[p] || p; };
+  // The atelier script calls this for /media/*. The map holds an index into
+  // the shared resource table, so the bytes are stored once even though the
+  // poster is also named by an attribute in the markup.
+  window.__res = function (p) {
+    var i = P.media[p];
+    return typeof i === 'number' ? P.res[i] : p;
+  };
 
   var RES = P.res, ROUTES = P.routes;
   var frame = document.getElementById('frame');
