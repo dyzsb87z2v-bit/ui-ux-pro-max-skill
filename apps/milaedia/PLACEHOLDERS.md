@@ -266,3 +266,23 @@ What was done to keep the risk low, rather than to claim it away:
 
 Total JavaScript across the whole site is **44 KB** — no framework, no 3D
 library. The depth and reveal engines are ~6 KB combined.
+
+---
+
+## The intro gate is no longer on /home
+
+`IntroGate` was the first design's cinematic threshold: the layered atelier
+scene, dissolving to reveal the page. It is not deleted -- the component and
+its script are untouched -- but it no longer runs on `/home`.
+
+Two reasons, both about the second reference:
+
+1. `/` is already a threshold. The Cover carries "Enter the experience", so a
+   visitor met the gate on `/home` as the SECOND barrier before any content.
+2. The gate speaks the first reference's visual language and played on top of
+   the new hero, which is itself the cinematic moment now -- a full-bleed
+   atelier photograph on four depth planes. Stacking the old one in front
+   undercut it.
+
+To put it back: import the component in `src/pages/home.astro` and place
+`<IntroGate />` as the first child of `<Base>`. One line, nothing else changed.
