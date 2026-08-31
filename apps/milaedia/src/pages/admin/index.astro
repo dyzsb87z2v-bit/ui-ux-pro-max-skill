@@ -1,121 +1,658 @@
 ---
-import Base from '../../layouts/Base.astro';
-import Ornament from '../../components/primitives/Ornament.astro';
-import Icon from '../../components/primitives/Icon.astro';
-import { products } from '../../data/catalogue';
-import { collections } from '../../data/site';
-
 /**
- * Admin foundation.
+ * MiLAEDiA admin.
  *
- * SECURITY: this route carries `noindex` and is excluded from the sitemap.
- * It is a SHELL — it renders read-only counts from the catalogue module and
- * exposes no mutation. Real administration must sit behind edge auth
- * (Cloudflare Access, free for ≤50 users) before any write path is added.
- * The rail below is the measured admin composition: 25px item pitch,
- * geometric sans, gold-on-#332C21 active pill.
+ * A real editor, not a mockup: it reads and writes the live catalogue through
+ * the GitHub API and every save is a commit that triggers a Cloudflare
+ * rebuild. See src/lib/admin-repo.ts for why the repository is the database.
+ *
+ * SECURITY, stated plainly. This page is public HTML with no secrets in it.
+ * It can do nothing until an editor pastes a GitHub token, which is held in
+ * that browser's localStorage and sent only to api.github.com. There is no
+ * server here to attack and no session to steal. The real access control is
+ * the token's own scope: give it Contents read/write on this one repository
+ * and nothing else.
+ *
+ * It is noindex, and it is not linked from any public navigation.
  */
-const sections = [
-  ['Dashboard', '/admin', true],
-  ['Orders', '/admin', false],
-  ['Products', '/admin', false],
-  ['Collections', '/admin', false],
-  ['Customers', '/admin', false],
-  ['Messages', '/admin', false],
-  ['Settings', '/admin', false],
-  ['Reports', '/admin', false],
-] as const;
+import Base from '../../layouts/Base.astro';
+import { collections } from '../../data/site';
+import { products } from '../../data/catalogue';
 
-const stats = [
-  ['Products', String(products.length)],
-  ['Collections', String(collections.length)],
-  ['One-of-one', String(products.filter(p => p.inventoryMode === 'one_of_one').length)],
-  ['Made to order', String(products.filter(p => p.inventoryMode === 'made_to_order').length)],
-  ['Sold (archive)', String(products.filter(p => p.soldAt).length)],
-  ['3D models', String(products.filter(p => p.model).length)],
-];
+const collectionSlugs = collections.map((c) => ({ slug: c.slug, title: c.title }));
+const shipped = products.length;
 ---
-<Base title="Admin — MiLAEDiA">
-  <meta slot="head" name="robots" content="noindex, nofollow" />
-  <div class="admin">
-    <aside class="rail" aria-label="Administration">
-      <a class="brand" href="/"><Ornament variant="lozenge" size="1.2em" class="a-mark" /><span>MiLAEDiA</span></a>
-      <nav><ul>
-        {sections.map(([label, href, active]) => (
-          <li><a href={href} aria-current={active ? 'page' : undefined}>{label}</a></li>
-        ))}
-      </ul></nav>
-      <a class="out" href="/">Leave admin</a>
-    </aside>
+<Base title="Atelier admin — MiLAEDiA" description="Private.">
+  <Fragment slot="head"><meta name="robots" content="noindex, nofollow" /></Fragment>
 
-    <main id="main" class="apanel">
-      <h1>Dashboard</h1>
-      <p class="lead">
-        Read-only foundation. No write path is exposed and no authentication is
-        configured on this deployment — connect edge auth before adding one.
+  <main id="main" class="admin">
+    <header class="top">
+      <div>
+        <p class="eyebrow" data-uppercase>MiLAEDiA</p>
+        <h1>Atelier admin</h1>
+      </div>
+      <div class="who">
+        <span class="dot" data-conn-dot></span>
+        <span data-conn-label>Locked</span>
+        <button class="ghost sm" type="button" data-signout hidden>Sign out</button>
+      </div>
+    </header>
+
+    <!-- ===== connect ===== -->
+    <section class="panel" data-panel="connect">
+      <h2>Connect</h2>
+      <p class="note">
+        This page holds no secrets and can change nothing on its own. Paste a
+        GitHub token with <strong>Contents: read and write</strong> on this one
+        repository. It stays in this browser and is sent only to GitHub.
       </p>
+      <div class="grid2">
+        <label>Owner<input data-f="owner" value="dyzsb87z2v-bit" autocomplete="off" spellcheck="false" /></label>
+        <label>Repository<input data-f="repo" value="MiLAEDiaaaa" autocomplete="off" spellcheck="false" /></label>
+      </div>
+      <label>Branch<input data-f="branch" value="main" autocomplete="off" spellcheck="false" /></label>
+      <label>Token
+        <input data-f="token" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false" />
+      </label>
+      <div class="row">
+        <button class="solid" type="button" data-connect>Connect</button>
+        <a class="link" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Create a token</a>
+      </div>
+      <p class="msg" data-connect-msg hidden></p>
+    </section>
 
-      <ul class="stats" role="list">
-        {stats.map(([k, v]) => (<li><span class="sv">{v}</span><span class="sk">{k}</span></li>))}
-      </ul>
+    <!-- ===== everything below needs a connection ===== -->
+    <div class="work" data-work hidden>
 
-      <h2>Where content lives</h2>
-      <dl class="where">
-        <dt>Products, prices, availability</dt><dd><code>src/data/catalogue.ts</code></dd>
-        <dt>Collections</dt><dd><code>src/data/site.ts</code></dd>
-        <dt>3D models</dt><dd>set <code>model</code> on a product record; drop the GLB in <code>public/models/</code></dd>
-        <dt>Product imagery</dt><dd><code>src/assets/collections/</code> via <code>src/lib/images.ts</code></dd>
-        <dt>Scene &amp; atelier media</dt><dd><code>src/assets/scene/</code>, <code>src/assets/atelier/</code>, <code>public/media/</code></dd>
-        <dt>Design tokens</dt><dd><code>src/styles/tokens.css</code></dd>
-        <dt>Payment integration</dt><dd><code>src/lib/payment.ts</code> — the only file a provider touches</dd>
-        <dt>Legal copy</dt><dd><code>src/pages/legal/</code></dd>
-      </dl>
-    </main>
+      <nav class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="products">Products</button>
+        <button role="tab" aria-selected="false" data-tab="media">Images</button>
+        <button role="tab" aria-selected="false" data-tab="history">History</button>
+      </nav>
+
+      <!-- ---- products ---- -->
+      <section class="panel" data-view="products">
+        <div class="panel-head">
+          <h2>Products <span class="count" data-count>{shipped}</span></h2>
+          <div class="row">
+            <button class="ghost sm" type="button" data-reload>Reload</button>
+            <button class="solid sm" type="button" data-new>Add piece</button>
+          </div>
+        </div>
+        <p class="msg" data-prod-msg hidden></p>
+        <ul class="list" data-list></ul>
+
+        <div class="save-bar" data-savebar hidden>
+          <span data-dirty-label>1 unsaved change</span>
+          <div class="row">
+            <button class="ghost sm" type="button" data-discard>Discard</button>
+            <button class="solid sm" type="button" data-save>Publish to site</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- media ---- -->
+      <section class="panel" data-view="media" hidden>
+        <div class="panel-head"><h2>Images</h2></div>
+        <p class="note">
+          Uploads go to <code>public/uploads/</code> and are served at
+          <code>/uploads/&lt;name&gt;</code>. Use that path in a product's
+          image field. Files here are served as uploaded — they are not put
+          through the build's image pipeline, so upload them already sized.
+        </p>
+        <label class="file">
+          <input type="file" accept="image/*" data-upload multiple />
+          <span>Choose images…</span>
+        </label>
+        <p class="msg" data-media-msg hidden></p>
+        <ul class="media" data-media></ul>
+      </section>
+
+      <!-- ---- history ---- -->
+      <section class="panel" data-view="history" hidden>
+        <div class="panel-head">
+          <h2>Recent changes</h2>
+          <button class="ghost sm" type="button" data-hist-reload>Reload</button>
+        </div>
+        <p class="note">
+          Every save is a commit. Cloudflare rebuilds automatically and the
+          change is live in about three minutes.
+        </p>
+        <ul class="hist" data-hist></ul>
+      </section>
+    </div>
+  </main>
+
+  <!-- ---- editor sheet ---- -->
+  <div class="sheet" data-sheet hidden>
+    <div class="sheet-in" role="dialog" aria-modal="true" aria-label="Edit piece">
+      <header class="sheet-head">
+        <h3 data-sheet-title>Edit</h3>
+        <button class="ghost sm" type="button" data-sheet-close aria-label="Close">Close</button>
+      </header>
+      <div class="sheet-body" data-form></div>
+      <footer class="sheet-foot">
+        <button class="ghost" type="button" data-del>Delete</button>
+        <button class="solid" type="button" data-apply>Done</button>
+      </footer>
+    </div>
   </div>
+
+  <script is:inline define:vars={{ collectionSlugs }}>
+    window.__MILAEDIA_COLLECTIONS = collectionSlugs;
+  </script>
 </Base>
 
 <style>
-  .admin { display: grid; grid-template-columns: clamp(190px, 18vw, 240px) 1fr; min-block-size: 100vh; }
-  .rail { border-inline-end: 1px solid var(--hairline); padding: 1.4rem 1rem;
-    display: grid; align-content: start; gap: 1.4rem; }
-  .brand { display: inline-flex; align-items: center; gap: .55em; text-decoration: none;
-    color: var(--gold-hi); font-family: var(--font-display); font-size: 1rem; }
-  .brand :global(.a-mark) { color: var(--gold); }
-  .rail nav ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-  .rail nav a {
-    display: block; padding: .55em .8em; border-radius: 4px; text-decoration: none;
-    /* ADMIN ONLY — the geometric sans never appears on the public site. */
-    font-family: var(--font-ui); font-size: .82rem; letter-spacing: .02em;
-    /* Measured contrast fix: the reference's idle label failed AA at 2.88:1. */
-    color: #7A7670;
+  .admin {
+    inline-size: min(100% - 2 * var(--page-margin), 1100px);
+    margin-inline: auto;
+    padding-block: clamp(1.5rem, 5vh, 3rem) clamp(6rem, 14vh, 9rem);
+    display: grid;
+    gap: clamp(1rem, 2.5vh, 1.6rem);
   }
-  .rail nav a:hover { color: var(--silver-hi); }
-  .rail nav a[aria-current='page'] { background: var(--active-fill); color: var(--gold-hi); }
-  .out { font-family: var(--font-ui); font-size: .78rem; color: var(--silver); text-decoration: none; }
-  .out:hover { color: var(--gold-hi); }
 
-  .apanel { padding: clamp(1.5rem, 4vw, 3rem); display: grid; gap: 1.6rem; align-content: start; }
-  h1 { margin: 0; font-family: var(--font-display); font-weight: 300;
-    font-size: clamp(1.8rem, 4vw, 2.8rem); color: #EDE7DA; }
-  h2 { margin: 1.5rem 0 0; font-family: var(--font-display); font-weight: 400;
-    font-size: 1.15rem; color: #EDE7DA; }
-  .lead { margin: 0; font-family: var(--font-ui); font-size: .9rem; line-height: 1.8;
-    color: var(--silver); max-inline-size: 62ch; }
-  .stats { list-style: none; margin: 0; padding: 0; display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px;
-    background: var(--hairline-soft); border: 1px solid var(--hairline-soft);
-    border-radius: var(--radius); overflow: hidden; }
-  .stats li { background: var(--panel); padding: 1.1rem 1.2rem; display: grid; gap: .3em; }
-  .sv { font-family: var(--font-display); font-size: 1.8rem; color: var(--gold-hi);
-    font-variant-numeric: tabular-nums; line-height: 1; }
-  .sk { font-family: var(--font-ui); font-size: .72rem; letter-spacing: .12em;
-    text-transform: uppercase; color: var(--silver); opacity: .7; }
-  .where { display: grid; grid-template-columns: auto 1fr; gap: .6em 1.5rem; margin: 0;
-    font-family: var(--font-ui); font-size: .85rem; }
-  .where dt { color: var(--bronze); }
-  .where dd { margin: 0; color: var(--silver-hi); }
-  code { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: .9em;
-    color: var(--gold-hi); background: rgba(185,151,99,.08); padding: .1em .4em; border-radius: 3px; }
-  @media (max-width: 700px) { .admin { grid-template-columns: 1fr; } .rail { border-inline-end: 0;
-    border-block-end: 1px solid var(--hairline); } }
+  .top { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .top h1 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.2rem); }
+  .who { display: flex; align-items: center; gap: 0.6rem; font-family: var(--font-display); font-size: var(--type-card-link); color: var(--silver); }
+  .dot { inline-size: 8px; block-size: 8px; border-radius: 99px; background: var(--bronze); flex: 0 0 auto; }
+  .dot[data-on] { background: #7FBF9A; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-card);
+    padding: clamp(1rem, 2.4vw, 1.6rem);
+    display: grid; gap: 0.9rem;
+  }
+  .panel h2 { margin: 0; font-size: clamp(1.05rem, 1.6vw, 1.3rem); }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .count {
+    font-size: 0.72em; color: var(--bronze); border: 1px solid var(--hairline);
+    border-radius: 99px; padding: 0.1em 0.6em; vertical-align: middle;
+  }
+  .note { margin: 0; font-size: var(--type-card-link); line-height: 1.75; color: var(--silver); }
+  .note code { color: var(--gold); font-size: 0.94em; }
+
+  label { display: grid; gap: 0.35em; font-family: var(--font-display); font-size: var(--type-card-link); color: var(--silver); }
+  input, select, textarea {
+    inline-size: 100%; padding: 0.62em 0.75em;
+    background: var(--raised); color: var(--silver-hi);
+    border: 1px solid var(--hairline); border-radius: 7px;
+    font-family: var(--font-display); font-size: 0.98rem;
+  }
+  textarea { min-block-size: 5.5em; resize: vertical; line-height: 1.65; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--gold); outline-offset: 1px; border-color: var(--gold);
+  }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+
+  .row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+  button.solid, button.ghost {
+    font-family: var(--font-display); letter-spacing: var(--track-nav);
+    text-transform: uppercase; font-size: var(--type-card-link);
+    padding: 0.7em 1.2em; border-radius: 7px; cursor: pointer;
+    transition: background-color 200ms var(--ease-cinematic), border-color 200ms var(--ease-cinematic), color 200ms var(--ease-cinematic);
+  }
+  button.sm { padding: 0.5em 0.85em; }
+  .solid { background: var(--gold-scene); color: #FDEAC2; border: 1px solid var(--gold-scene); }
+  .solid:hover { background: #B9843F; }
+  .ghost { background: transparent; color: var(--silver-hi); border: 1px solid var(--hairline); }
+  .ghost:hover { color: var(--gold-hi); border-color: var(--gold); }
+  button[disabled] { opacity: 0.45; cursor: not-allowed; }
+  .link { font-family: var(--font-display); font-size: var(--type-card-link); color: var(--gold); }
+
+  .msg {
+    margin: 0; padding: 0.7em 0.9em; border-radius: 7px;
+    font-family: var(--font-display); font-size: var(--type-card-link); line-height: 1.6;
+    background: var(--raised); border-inline-start: 3px solid var(--bronze); color: var(--silver-hi);
+    white-space: pre-wrap;
+  }
+  .msg[data-kind='error'] { border-color: #8C2F1C; color: #E08D77; }
+  .msg[data-kind='ok'] { border-color: #2F6B45; color: #7FBF9A; }
+
+  /* ---- tabs ---- */
+  .tabs { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .tabs button {
+    background: none; border: 1px solid transparent; border-radius: 99px;
+    padding: 0.5em 1em; cursor: pointer;
+    font-family: var(--font-display); font-size: var(--type-card-link);
+    letter-spacing: var(--track-nav); text-transform: uppercase; color: var(--silver);
+  }
+  .tabs button[aria-selected='true'] { color: var(--gold-hi); border-color: var(--hairline); background: var(--raised); }
+
+  /* ---- product list ---- */
+  .list, .media, .hist { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+  .list li {
+    display: flex; align-items: center; gap: 0.9rem;
+    padding: 0.75rem 0.9rem;
+    background: var(--raised); border: 1px solid var(--hairline); border-radius: 9px;
+  }
+  .li-main { flex: 1; min-inline-size: 0; display: grid; gap: 0.2em; }
+  .li-title { font-family: var(--font-display); color: var(--silver-hi); font-size: 1rem; }
+  .li-meta { font-family: var(--font-display); font-size: var(--type-card-link); color: var(--silver); opacity: 0.75; }
+  .li-state {
+    font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-nav); text-transform: uppercase;
+    padding: 0.25em 0.6em; border-radius: 99px; border: 1px solid var(--hairline);
+    white-space: nowrap;
+  }
+  .li-state[data-tone='gold'] { color: var(--gold); border-color: var(--gold-scene); }
+  .li-state[data-tone='silver'] { color: var(--silver); opacity: 0.7; }
+  li[data-changed] { border-color: var(--gold); }
+
+  .media li { display: flex; align-items: center; gap: 0.8rem; padding: 0.55rem 0.8rem; background: var(--raised); border: 1px solid var(--hairline); border-radius: 8px; }
+  .media img { inline-size: 46px; block-size: 46px; object-fit: cover; border-radius: 5px; flex: 0 0 auto; }
+  .media code { font-size: 0.82rem; color: var(--gold); overflow-wrap: anywhere; }
+
+  .hist li { padding: 0.6rem 0.8rem; background: var(--raised); border: 1px solid var(--hairline); border-radius: 8px; display: grid; gap: 0.25em; }
+  .hist .h-msg { font-family: var(--font-display); color: var(--silver-hi); font-size: 0.95rem; }
+  .hist .h-meta { font-family: var(--font-display); font-size: var(--type-descriptor); color: var(--silver); opacity: 0.7; }
+
+  .file { position: relative; }
+  .file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .file span {
+    display: block; text-align: center; padding: 1.1em;
+    border: 1px dashed var(--hairline-2, #554C40); border-radius: 9px;
+    font-family: var(--font-display); color: var(--silver);
+  }
+
+  /* ---- save bar: sticky, because the list is long on a phone ---- */
+  .save-bar {
+    position: sticky; inset-block-end: 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    flex-wrap: wrap;
+    margin: 0.4rem -0.4rem -0.4rem;
+    padding: 0.8rem 0.9rem;
+    background: var(--active-fill, #332C21);
+    border: 1px solid var(--gold-scene); border-radius: 9px;
+    font-family: var(--font-display); font-size: var(--type-card-link); color: var(--gold-hi);
+  }
+
+  /* ---- editor sheet ---- */
+  .sheet {
+    position: fixed; inset: 0; z-index: 80;
+    background: rgba(0,0,0,.72);
+    display: grid; place-items: end center;
+  }
+  .sheet[hidden] { display: none; }
+  .sheet-in {
+    inline-size: min(100%, 720px); max-block-size: 92vh;
+    display: grid; grid-template-rows: auto 1fr auto;
+    background: var(--panel); border: 1px solid var(--hairline);
+    border-radius: 14px 14px 0 0;
+  }
+  .sheet-head, .sheet-foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 0.9rem 1.1rem;
+  }
+  .sheet-head { border-block-end: 1px solid var(--hairline); }
+  .sheet-foot { border-block-start: 1px solid var(--hairline); }
+  .sheet-head h3 { margin: 0; font-size: 1.05rem; color: var(--silver-hi); }
+  .sheet-body { overflow-y: auto; padding: 1.1rem; display: grid; gap: 0.9rem; }
+  .sheet-body .fieldset { display: grid; gap: 0.9rem; }
+  .sheet-body h4 {
+    margin: 0.5rem 0 0; font-family: var(--font-display);
+    font-size: var(--type-descriptor); letter-spacing: var(--track-cities);
+    text-transform: uppercase; color: var(--bronze); font-weight: 400;
+  }
+
+  @media (max-width: 620px) {
+    .grid2 { grid-template-columns: 1fr; }
+    .list li { flex-wrap: wrap; }
+    .sheet-in { max-block-size: 96vh; }
+  }
 </style>
+
+<script>
+  import {
+    loadConfig, saveConfig, clearConfig, verify,
+    readFile, writeFile, writeBinary, listDir, recentCommits,
+    type RepoConfig,
+  } from '../../lib/admin-repo';
+
+  const CATALOGUE = 'src/data/catalogue.json';
+  const $ = <T extends Element = HTMLElement>(s: string) => document.querySelector(s) as T | null;
+  const $$ = (s: string) => Array.from(document.querySelectorAll(s));
+
+  const COLLECTIONS: { slug: string; title: string }[] = (window as any).__MILAEDIA_COLLECTIONS ?? [];
+
+  let cfg: RepoConfig | null = null;
+  let sha = '';
+  let items: any[] = [];
+  let original = '';
+  let editing = -1;
+
+  const msg = (el: HTMLElement | null, text: string, kind?: 'ok' | 'error') => {
+    if (!el) return;
+    el.textContent = text;
+    el.hidden = !text;
+    if (kind) el.dataset.kind = kind; else delete el.dataset.kind;
+  };
+
+  const money = (minor: number, cur = 'EUR') =>
+    new Intl.NumberFormat('en-DE', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(minor / 100);
+
+  const dirty = () => JSON.stringify(items, null, 2) + '\n' !== original;
+
+  function paintDirty() {
+    const bar = $('[data-savebar]');
+    if (!bar) return;
+    bar.hidden = !dirty();
+    const label = $('[data-dirty-label]');
+    if (label) label.textContent = 'Unsaved changes — the site still shows the old version';
+  }
+
+  /* ---------- connect ---------- */
+  function paintConn(login?: string) {
+    const dot = $('[data-conn-dot]'), label = $('[data-conn-label]'), out = $('[data-signout]');
+    if (cfg && login) {
+      dot?.setAttribute('data-on', '');
+      if (label) label.textContent = `${login} · ${cfg.owner}/${cfg.repo}`;
+      if (out) out.hidden = false;
+      const w = $('[data-work]'); if (w) w.hidden = false;
+      const p = $('[data-panel="connect"]'); if (p) p.hidden = true;
+    } else {
+      dot?.removeAttribute('data-on');
+      if (label) label.textContent = 'Locked';
+      if (out) out.hidden = true;
+    }
+  }
+
+  async function connect(c: RepoConfig) {
+    const box = $('[data-connect-msg]');
+    msg(box, 'Checking…');
+    try {
+      const login = await verify(c);
+      cfg = c; saveConfig(c);
+      msg(box, '');
+      paintConn(login);
+      await loadCatalogue();
+      loadMedia();
+      loadHistory();
+    } catch (e: any) {
+      msg(box, String(e.message ?? e), 'error');
+    }
+  }
+
+  $('[data-connect]')?.addEventListener('click', () => {
+    const val = (f: string) => ($(`[data-f="${f}"]`) as HTMLInputElement | null)?.value.trim() ?? '';
+    const c = { owner: val('owner'), repo: val('repo'), branch: val('branch') || 'main', token: val('token') };
+    if (!c.owner || !c.repo || !c.token) {
+      msg($('[data-connect-msg]'), 'Owner, repository and token are all required.', 'error');
+      return;
+    }
+    connect(c);
+  });
+
+  $('[data-signout]')?.addEventListener('click', () => {
+    clearConfig(); cfg = null; items = []; original = '';
+    paintConn();
+    const w = $('[data-work]'); if (w) w.hidden = true;
+    const p = $('[data-panel="connect"]'); if (p) p.hidden = false;
+  });
+
+  /* ---------- tabs ---------- */
+  $$('[data-tab]').forEach((b) => b.addEventListener('click', () => {
+    const name = (b as HTMLElement).dataset.tab!;
+    $$('[data-tab]').forEach((o) => o.setAttribute('aria-selected', String(o === b)));
+    $$('[data-view]').forEach((v) => { (v as HTMLElement).hidden = (v as HTMLElement).dataset.view !== name; });
+  }));
+
+  /* ---------- catalogue ---------- */
+  async function loadCatalogue() {
+    if (!cfg) return;
+    const box = $('[data-prod-msg]');
+    msg(box, 'Loading…');
+    try {
+      const f = await readFile(cfg, CATALOGUE);
+      sha = f.sha; original = f.text; items = JSON.parse(f.text);
+      msg(box, '');
+      renderList();
+    } catch (e: any) {
+      msg(box, String(e.message ?? e), 'error');
+    }
+  }
+
+  function stateOf(p: any) {
+    if (p.soldAt) return { label: 'Sold', tone: 'silver' };
+    if (p.inventoryMode === 'made_to_order') return { label: 'To order', tone: 'gold' };
+    const left = (p.stockQty ?? 0) - (p.reservedQty ?? 0);
+    if (left <= 0) return { label: 'Out', tone: 'silver' };
+    if (p.inventoryMode === 'one_of_one') return { label: 'One of one', tone: 'gold' };
+    return { label: `${left} in stock`, tone: 'gold' };
+  }
+
+  function renderList() {
+    const ul = $('[data-list]'); if (!ul) return;
+    const count = $('[data-count]'); if (count) count.textContent = String(items.length);
+    ul.innerHTML = '';
+    items.forEach((p, i) => {
+      const s = stateOf(p);
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <span class="li-main">
+          <span class="li-title"></span>
+          <span class="li-meta"></span>
+        </span>
+        <span class="li-state" data-tone="${s.tone}"></span>
+        <button class="ghost sm" type="button">Edit</button>`;
+      (li.querySelector('.li-title') as HTMLElement).textContent = p.title || '(untitled)';
+      (li.querySelector('.li-meta') as HTMLElement).textContent =
+        `${money(p.priceMinor, p.currency)} · ${p.collection} · ${p.dimensionsCm?.join(' × ') ?? '?'} cm`;
+      (li.querySelector('.li-state') as HTMLElement).textContent = s.label;
+      li.querySelector('button')!.addEventListener('click', () => openSheet(i));
+      ul.appendChild(li);
+    });
+    paintDirty();
+  }
+
+  /* ---------- editor ---------- */
+  const FIELDS: [string, string, string, any?][] = [
+    ['title', 'Title', 'text'],
+    ['slug', 'URL slug', 'text'],
+    ['collection', 'Collection', 'collection'],
+    ['priceMinor', 'Price (in cents)', 'number'],
+    ['inventoryMode', 'Inventory', 'select', ['one_of_one', 'stocked', 'made_to_order']],
+    ['stockQty', 'Stock quantity', 'number'],
+    ['reservedQty', 'Reserved', 'number'],
+    ['leadTimeDays', 'Lead time (days)', 'number'],
+    ['soldAt', 'Sold on (YYYY-MM-DD, blank if not)', 'text'],
+    ['origin', 'Origin', 'text'],
+    ['material', 'Material', 'text'],
+    ['weave', 'Weave', 'text'],
+    ['knotDensity', 'Knot density', 'text'],
+    ['ageNote', 'Period', 'text'],
+    ['image', 'Image key or /uploads/… path', 'text'],
+    ['summary', 'Summary', 'area'],
+    ['description', 'Description', 'area'],
+    ['care', 'Care', 'area'],
+  ];
+
+  function openSheet(i: number) {
+    editing = i;
+    const p = items[i];
+    const body = $('[data-form]'); if (!body) return;
+    const t = $('[data-sheet-title]'); if (t) t.textContent = p.title || 'New piece';
+    body.innerHTML = '';
+
+    // dimensions get their own pair — they are an array, not a scalar
+    const dim = document.createElement('div');
+    dim.className = 'grid2';
+    dim.innerHTML = `<label>Width (cm)<input type="number" data-dim="0" /></label>
+                     <label>Length (cm)<input type="number" data-dim="1" /></label>`;
+    (dim.querySelector('[data-dim="0"]') as HTMLInputElement).value = String(p.dimensionsCm?.[0] ?? '');
+    (dim.querySelector('[data-dim="1"]') as HTMLInputElement).value = String(p.dimensionsCm?.[1] ?? '');
+
+    for (const [key, label, kind, opts] of FIELDS) {
+      const wrap = document.createElement('label');
+      wrap.append(label);
+      let input: HTMLElement;
+      if (kind === 'area') {
+        input = document.createElement('textarea');
+        (input as HTMLTextAreaElement).value = p[key] ?? '';
+      } else if (kind === 'select' || kind === 'collection') {
+        input = document.createElement('select');
+        const list = kind === 'collection'
+          ? COLLECTIONS.map((c) => [c.slug, c.title])
+          : (opts as string[]).map((o) => [o, o]);
+        for (const [v, lbl] of list) {
+          const o = document.createElement('option');
+          o.value = v as string; o.textContent = lbl as string;
+          if (p[key] === v) o.selected = true;
+          input.appendChild(o);
+        }
+      } else {
+        input = document.createElement('input');
+        (input as HTMLInputElement).type = kind;
+        (input as HTMLInputElement).value = p[key] ?? '';
+      }
+      (input as HTMLElement).dataset.k = key;
+      wrap.appendChild(input);
+      body.appendChild(wrap);
+      if (key === 'knotDensity') body.appendChild(dim);
+    }
+    const sheet = $('[data-sheet]'); if (sheet) sheet.hidden = false;
+  }
+
+  function closeSheet() { const s = $('[data-sheet]'); if (s) s.hidden = true; editing = -1; }
+  $('[data-sheet-close]')?.addEventListener('click', closeSheet);
+
+  $('[data-apply]')?.addEventListener('click', () => {
+    if (editing < 0) return;
+    const p = items[editing];
+    $$('[data-k]').forEach((el) => {
+      const key = (el as HTMLElement).dataset.k!;
+      const raw = (el as HTMLInputElement).value;
+      const numeric = ['priceMinor', 'stockQty', 'reservedQty', 'leadTimeDays', 'lowThreshold'];
+      if (numeric.includes(key)) p[key] = raw === '' ? null : Number(raw);
+      else p[key] = raw === '' ? (key === 'soldAt' || key === 'ageNote' ? null : '') : raw;
+    });
+    const w = $('[data-dim="0"]') as HTMLInputElement | null;
+    const l = $('[data-dim="1"]') as HTMLInputElement | null;
+    if (w && l) p.dimensionsCm = [Number(w.value) || 0, Number(l.value) || 0];
+    closeSheet(); renderList();
+  });
+
+  $('[data-del]')?.addEventListener('click', () => {
+    if (editing < 0) return;
+    if (!confirm(`Remove “${items[editing].title}” from the catalogue?`)) return;
+    items.splice(editing, 1);
+    closeSheet(); renderList();
+  });
+
+  $('[data-new]')?.addEventListener('click', () => {
+    const n = items.length + 1;
+    items.push({
+      id: `piece-${Date.now().toString(36)}`, slug: `new-piece-${n}`, title: 'New piece',
+      collection: COLLECTIONS[0]?.slug ?? 'luxury-rugs', priceMinor: 100000, currency: 'EUR',
+      inventoryMode: 'one_of_one', stockQty: 1, reservedQty: 0, soldAt: null,
+      leadTimeDays: null, lowThreshold: null, origin: '', material: '', weave: '',
+      knotDensity: '', dimensionsCm: [200, 300], ageNote: null,
+      summary: '', description: '', care: '', image: COLLECTIONS[0]?.slug ?? 'luxury-rugs',
+      model: null,
+    });
+    renderList();
+    openSheet(items.length - 1);
+  });
+
+  $('[data-reload]')?.addEventListener('click', () => {
+    if (dirty() && !confirm('Reload and lose the unsaved changes?')) return;
+    loadCatalogue();
+  });
+  $('[data-discard]')?.addEventListener('click', () => {
+    if (!confirm('Discard the unsaved changes?')) return;
+    items = JSON.parse(original); renderList();
+  });
+
+  /* ---------- publish ---------- */
+  $('[data-save]')?.addEventListener('click', async () => {
+    if (!cfg) return;
+    const btn = $('[data-save]') as HTMLButtonElement;
+    const box = $('[data-prod-msg]');
+    btn.disabled = true;
+    msg(box, 'Publishing…');
+    try {
+      const text = JSON.stringify(items, null, 2) + '\n';
+      sha = await writeFile(cfg, CATALOGUE, text, `Catalogue: ${items.length} pieces`, sha);
+      original = text;
+      msg(box, 'Published. Cloudflare is rebuilding — the site updates in about three minutes.', 'ok');
+      paintDirty();
+      loadHistory();
+    } catch (e: any) {
+      msg(box, String(e.message ?? e), 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  /* ---------- media ---------- */
+  async function loadMedia() {
+    if (!cfg) return;
+    const ul = $('[data-media]'); if (!ul) return;
+    const files = await listDir(cfg, 'public/uploads');
+    ul.innerHTML = '';
+    if (!files.length) {
+      const li = document.createElement('li');
+      li.textContent = 'No uploads yet.';
+      ul.appendChild(li); return;
+    }
+    for (const f of files) {
+      const li = document.createElement('li');
+      const path = `/uploads/${f.name}`;
+      li.innerHTML = `<img alt="" loading="lazy"><span><code></code></span>`;
+      (li.querySelector('img') as HTMLImageElement).src = path;
+      (li.querySelector('code') as HTMLElement).textContent = path;
+      ul.appendChild(li);
+    }
+  }
+
+  $('[data-upload]')?.addEventListener('change', async (e) => {
+    if (!cfg) return;
+    const box = $('[data-media-msg]');
+    const input = e.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    if (!files.length) return;
+    try {
+      for (const file of files) {
+        if (file.size > 4 * 1024 * 1024) throw new Error(`${file.name} is over 4 MB — resize it before uploading.`);
+        msg(box, `Uploading ${file.name}…`);
+        const name = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, '-');
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        await writeBinary(cfg, `public/uploads/${name}`, bytes, `Upload ${name}`);
+      }
+      msg(box, `Uploaded ${files.length} file(s). Use the path shown below in a product's image field.`, 'ok');
+      input.value = '';
+      loadMedia();
+    } catch (err: any) {
+      msg(box, String(err.message ?? err), 'error');
+    }
+  });
+
+  /* ---------- history ---------- */
+  async function loadHistory() {
+    if (!cfg) return;
+    const ul = $('[data-hist]'); if (!ul) return;
+    try {
+      const list = await recentCommits(cfg);
+      ul.innerHTML = '';
+      for (const c of list) {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="h-msg"></span><span class="h-meta"></span>`;
+        (li.querySelector('.h-msg') as HTMLElement).textContent = c.message;
+        (li.querySelector('.h-meta') as HTMLElement).textContent =
+          `${c.sha} · ${c.author} · ${c.date ? new Date(c.date).toLocaleString() : ''}`;
+        ul.appendChild(li);
+      }
+    } catch { /* history is informational */ }
+  }
+  $('[data-hist-reload]')?.addEventListener('click', loadHistory);
+
+  /* ---------- boot ---------- */
+  const saved = loadConfig();
+  if (saved) connect(saved);
+
+  addEventListener('beforeunload', (e) => {
+    if (dirty()) { e.preventDefault(); e.returnValue = ''; }
+  });
+</script>
