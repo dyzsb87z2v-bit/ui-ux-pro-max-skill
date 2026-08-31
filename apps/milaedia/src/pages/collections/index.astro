@@ -9,7 +9,7 @@
  * (Spec §12). The four MISSING cells are surfaced below rather than hidden.
  */
 import Base from '../../layouts/Base.astro';
-import SiteHeader from '../../components/SiteHeader.astro';
+import SalonHeader from '../../components/hero/SalonHeader.astro';
 import CollectionCard from '../../components/CollectionCard.astro';
 import Divider from '../../components/primitives/Divider.astro';
 import { collections, collectionsMissing, brand } from '../../data/site';
@@ -31,7 +31,7 @@ const images = {
 <Base title={`Collections — ${brand.wordmark}`}
       description="Antique, handwoven and luxury Persian rugs and silk tapestries, sourced and presented by MiLAEDiA.">
   <div class="shell">
-    <SiteHeader current="/collections" />
+    <SalonHeader current="/collections" />
     <main id="main" class="frame">
       <header class="head">
         <h1 class="title" data-type="display">Collections</h1>
@@ -61,7 +61,7 @@ const images = {
     justify-items: center;
     text-align: center;
     gap: 1em;
-    padding-block: clamp(90px, 15vh, 190px) clamp(28px, 5vh, 60px);
+    padding-block: clamp(2.5rem, 7vh, 5rem) clamp(28px, 5vh, 60px);
   }
   .title {
     margin: 0;

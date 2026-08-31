@@ -1,12 +1,12 @@
 ---
 import Base from '../layouts/Base.astro';
-import SiteHeader from '../components/SiteHeader.astro';
+import SalonHeader from '../components/hero/SalonHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import GhostButton from '../components/primitives/GhostButton.astro';
 import Divider from '../components/primitives/Divider.astro';
 ---
 <Base title="Your bag — MiLAEDiA" description="Your selected pieces.">
-  <SiteHeader />
+  <SalonHeader />
   <main id="main" class="frame">
     <header class="bhead">
       <h1 class="btitle">Your Bag</h1>
@@ -36,7 +36,7 @@ import Divider from '../components/primitives/Divider.astro';
 </Base>
 
 <style>
-  .bhead { padding-block: clamp(90px,14vh,170px) clamp(1.5rem,4vh,3rem); display:grid; gap:1rem; }
+  .bhead { padding-block: clamp(2.5rem, 7vh, 5rem) clamp(1.5rem,4vh,3rem); display:grid; gap:1rem; }
   .btitle { margin:0; font-family: var(--font-display); font-weight:300;
     font-size: clamp(2.4rem,6vw,4.6rem); line-height:1; color:#EDE7DA; }
   .bhead :global(.bhead-divider) { inline-size: min(340px,60%); }

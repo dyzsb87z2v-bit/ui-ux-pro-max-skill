@@ -72,6 +72,10 @@ const { variant = 'hero', class: cls = '' } = Astro.props;
 <style>
   .atelier {
     position: relative;
+    /* Clipped, like the hero stage: the planes are deliberately overscanned
+       so parallax never reveals an edge, and without this they escape and
+       push the page sideways. */
+    overflow: clip;
     /* Real perspective. The stage is a room seen from a fixed eye. */
     perspective: 1400px;
     perspective-origin: 62% 44%;

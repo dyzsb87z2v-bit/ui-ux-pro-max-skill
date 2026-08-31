@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import SiteHeader from '../components/SiteHeader.astro';
+import SalonHeader from '../components/hero/SalonHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { products } from '../data/catalogue';
 import { collections } from '../data/site';
@@ -13,7 +13,7 @@ const index = [
 ];
 ---
 <Base title="Search — MiLAEDiA" description="Search the house catalogue.">
-  <SiteHeader />
+  <SalonHeader />
   <main id="main" class="frame sr">
     <h1>Search</h1>
     <label class="field">
@@ -30,7 +30,7 @@ const index = [
 </Base>
 
 <style>
-  .sr { padding-block: clamp(90px,14vh,170px) clamp(4rem,10vh,8rem); max-inline-size: 70ch; }
+  .sr { padding-block: clamp(2.5rem, 7vh, 5rem) clamp(4rem,10vh,8rem); max-inline-size: 70ch; }
   h1 { margin:0 0 1.5rem; font-family: var(--font-display); font-weight:300;
     font-size: clamp(2.4rem,6vw,4.4rem); color:#EDE7DA; }
   .field input {

@@ -7,6 +7,11 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
+  /* Sideways scroll is stopped at the root. `body { overflow-x: hidden }`
+     alone did not: the perspective stages put the overflow on <html>, and
+     /custom measured 8px of real sideways scroll. `clip` creates no scroll
+     container, unlike `hidden`. */
+  overflow-x: clip;
   background: var(--ground);
   color-scheme: dark;
   -webkit-text-size-adjust: 100%;

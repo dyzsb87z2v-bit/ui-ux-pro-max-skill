@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import SiteHeader from '../components/SiteHeader.astro';
+import SalonHeader from '../components/hero/SalonHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import Divider from '../components/primitives/Divider.astro';
 import Icon from '../components/primitives/Icon.astro';
@@ -30,7 +30,7 @@ const works = [
 ];
 ---
 <Base title="Gallery — MiLAEDiA" description="An exhibition of pieces from the house.">
-  <SiteHeader current="/gallery" />
+  <SalonHeader current="/gallery" />
   <main id="main" class="frame">
     <header class="gh">
       <h1>Gallery</h1>
@@ -66,7 +66,7 @@ const works = [
 </Base>
 
 <style>
-  .gh { display:grid; gap:1rem; padding-block: clamp(90px,14vh,170px) clamp(2rem,5vh,3.5rem); }
+  .gh { display:grid; gap:1rem; padding-block: clamp(2.5rem, 7vh, 5rem) clamp(2rem,5vh,3.5rem); }
   h1 { margin:0; font-family: var(--font-display); font-weight:300;
     font-size: clamp(2.6rem,7vw,5.4rem); line-height:1; color:#EDE7DA; }
   .lede { margin:0; font-family: var(--font-display); font-size: clamp(1rem,1.5vw,1.2rem);

@@ -1,11 +1,11 @@
 ---
 import Base from "../../layouts/Base.astro";
-import SiteHeader from "../../components/SiteHeader.astro";
+import SalonHeader from '../../components/hero/SalonHeader.astro';
 import SiteFooter from "../../components/SiteFooter.astro";
 import Divider from "../../components/primitives/Divider.astro";
 ---
 <Base title="Impressum — MiLAEDiA" description="Angaben gemäß § 5 TMG">
-  <SiteHeader />
+  <SalonHeader />
   <main id="main" class="frame legal">
     <header class="lhead">
       <p class="eyebrow" data-uppercase>Angaben gemäß § 5 TMG</p>
@@ -27,7 +27,7 @@ import Divider from "../../components/primitives/Divider.astro";
 </Base>
 
 <style>
-  .legal { padding-block: clamp(90px,14vh,170px) clamp(4rem,10vh,8rem); max-inline-size: 74ch; }
+  .legal { padding-block: clamp(2.5rem, 7vh, 5rem) clamp(4rem,10vh,8rem); max-inline-size: 74ch; }
   .lhead { display:grid; gap:1rem; margin-block-end:2rem; }
   .eyebrow { margin:0; font-family: var(--font-display); font-size: var(--type-descriptor);
     letter-spacing: var(--track-cities); text-transform:uppercase; color: var(--bronze); }

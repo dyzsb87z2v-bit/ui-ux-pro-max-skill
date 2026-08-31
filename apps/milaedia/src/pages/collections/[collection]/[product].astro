@@ -1,6 +1,6 @@
 ---
 import Base from '../../../layouts/Base.astro';
-import SiteHeader from '../../../components/SiteHeader.astro';
+import SalonHeader from '../../../components/hero/SalonHeader.astro';
 import SiteFooter from '../../../components/SiteFooter.astro';
 import RugViewer from '../../../components/RugViewer.astro';
 import ProductCard from '../../../components/ProductCard.astro';
@@ -54,7 +54,7 @@ const specs: [string, string][] = [
 ];
 ---
 <Base title={`${p.title} — ${collection.title} — MiLAEDiA`} description={p.summary}>
-  <SiteHeader current="/collections" />
+  <SalonHeader current="/collections" />
   <main id="main" class="frame">
     <nav class="crumbs" aria-label="Breadcrumb">
       <a href="/collections">Collections</a>
@@ -148,7 +148,7 @@ const specs: [string, string][] = [
 <style>
   .crumbs {
     display: flex; gap: 0.6em; align-items: center;
-    padding-block: clamp(80px, 13vh, 150px) 0;
+    padding-block: clamp(1.4rem, 4vh, 2.6rem) 0;
     font-family: var(--font-display); font-size: var(--type-card-link);
     letter-spacing: var(--track-nav); text-transform: uppercase;
   }

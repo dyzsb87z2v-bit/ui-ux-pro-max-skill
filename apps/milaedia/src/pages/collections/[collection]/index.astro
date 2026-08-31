@@ -1,6 +1,6 @@
 ---
 import Base from '../../../layouts/Base.astro';
-import SiteHeader from '../../../components/SiteHeader.astro';
+import SalonHeader from '../../../components/hero/SalonHeader.astro';
 import SiteFooter from '../../../components/SiteFooter.astro';
 import ProductCard from '../../../components/ProductCard.astro';
 import Divider from '../../../components/primitives/Divider.astro';
@@ -17,7 +17,7 @@ const items = byCollection(c.slug);
 const hero = collectionImages[c.slug];
 ---
 <Base title={`${c.title} — MiLAEDiA`} description={collectionCopy[c.slug]}>
-  <SiteHeader current="/collections" />
+  <SalonHeader current="/collections" />
   <main id="main" class="frame">
     <header class="chead">
       <div class="ctext">
@@ -71,7 +71,7 @@ const hero = collectionImages[c.slug];
   .chead {
     display: grid; grid-template-columns: minmax(0,1fr) minmax(0,.85fr);
     gap: clamp(1.5rem,5vw,4rem); align-items: center;
-    padding-block: clamp(90px,14vh,170px) clamp(2rem,5vh,3.5rem);
+    padding-block: clamp(2.5rem, 7vh, 5rem) clamp(2rem,5vh,3.5rem);
   }
   .ctext { display: grid; gap: 1rem; justify-items: start; }
   .eyebrow { margin:0; font-family: var(--font-display); font-size: var(--type-descriptor);

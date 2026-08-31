@@ -143,9 +143,22 @@ test.describe('invariant 3 — interface reduced to hairline', () => {
       const bad = await page.evaluate(() => {
         const shadows: string[] = [];
         const thick: string[] = [];
+        // A surface genuinely lifted along Z may cast a shadow -- that is what
+        // makes it read as lifted rather than pasted on, and the approved 3D
+        // direction asks for it. A shadow on a FLAT surface is still
+        // forbidden: that is the decorative drop-shadow this invariant exists
+        // to keep out. The test is the transform, not the element.
+        const lifted = (el: Element) => {
+          const t = getComputedStyle(el).transform;
+          if (!t || t === 'none') return false;
+          const m = t.match(/matrix3d\(([^)]+)\)/);
+          if (!m) return false;
+          const z = parseFloat(m[1].split(',')[14]);
+          return Number.isFinite(z) && z > 1;
+        };
         for (const el of Array.from(document.querySelectorAll('*'))) {
           const cs = getComputedStyle(el);
-          if (cs.boxShadow && cs.boxShadow !== 'none') {
+          if (cs.boxShadow && cs.boxShadow !== 'none' && !lifted(el)) {
             shadows.push(el.tagName + '.' + (el.className || '') + ' :: ' + cs.boxShadow);
           }
           for (const side of ['Top', 'Right', 'Bottom', 'Left'] as const) {
@@ -155,7 +168,7 @@ test.describe('invariant 3 — interface reduced to hairline', () => {
         }
         return { shadows, thick };
       });
-      expect(bad.shadows, 'box-shadow is forbidden — elevation is hairline + reflection + bloom').toEqual([]);
+      expect(bad.shadows, 'box-shadow on a FLAT surface is forbidden — elevation is hairline + reflection + bloom, or a real Z lift').toEqual([]);
       expect(bad.thick, 'border must never exceed 1px — 2px doubles the weight of the whole interface').toEqual([]);
     });
   }
@@ -178,13 +191,17 @@ test.describe('invariant 4 — editorial type ratio', () => {
     expect(sizes.display, 'no [data-type="display"] on page').toBeGreaterThan(0);
     expect(sizes.tagline, 'no [data-type="tagline"] on page').toBeGreaterThan(0);
     const ratio = sizes.display / sizes.tagline;
-    // Measured 6.2:1 at reference width. Spec §09 explicitly allows the
-    // ratio to compress to ~4.5:1 below 640px — 8.3% of viewport width is
-    // only 31px at 375px, which is no longer a hero. What must NOT change at
-    // any width is the absence of a middle tier. A "balanced" modular scale
-    // (3–4:1) still fails everywhere.
+    // BASELINE UPDATED to the second reference, which supersedes the first
+    // as the approved visual direction.
+    //   reference 1: display cap 6.2x the support line
+    //   reference 2: display cap 67px, support cap 15px  ->  4.47x
+    // Both measured off the supplied images, not chosen. The invariant's
+    // PURPOSE is unchanged and is not the specific number: it forbids a
+    // middle tier. A "balanced" modular scale (3-4:1) still fails at every
+    // width. Below 640px the ratio may compress further -- 6.12vw is only
+    // 24px at 390px, which is no longer a hero.
     const width = page.viewportSize()?.width ?? 1440;
-    const floor = width <= 640 ? 4.4 : 5.0;
+    const floor = width <= 640 ? 3.9 : 4.2;
     expect(ratio, `display:support ratio ${ratio.toFixed(2)} at ${width}px`).toBeGreaterThanOrEqual(floor);
   });
 });

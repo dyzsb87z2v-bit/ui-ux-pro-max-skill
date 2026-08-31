@@ -138,7 +138,9 @@ const links = [
     background: #0E0C0C;
   }
 
-  .brand { text-decoration: none; flex: 0 0 auto; }
+  /* An anchor with no colour inherits the UA default blue -- invariant 6
+     caught it on every page. */
+  .brand { text-decoration: none; flex: 0 0 auto; color: var(--gold-hi); }
   .brand :global(.brand-word) {
     font-size: clamp(1.15rem, 1.85vw, 1.78rem);
     letter-spacing: 0.03em;

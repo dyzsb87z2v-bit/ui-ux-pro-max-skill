@@ -1,12 +1,12 @@
 ---
 import Base from '../layouts/Base.astro';
-import SiteHeader from '../components/SiteHeader.astro';
+import SalonHeader from '../components/hero/SalonHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import GhostButton from '../components/primitives/GhostButton.astro';
 import Divider from '../components/primitives/Divider.astro';
 ---
 <Base title="Account — MiLAEDiA" description="Your acquisitions and enquiries.">
-  <SiteHeader />
+  <SalonHeader />
   <main id="main" class="frame acc">
     <h1>Account</h1>
     <Divider class="a-divider" />
@@ -20,7 +20,7 @@ import Divider from '../components/primitives/Divider.astro';
   <SiteFooter />
 </Base>
 <style>
-  .acc { padding-block: clamp(90px,14vh,170px) clamp(4rem,10vh,8rem); max-inline-size:62ch; display:grid; gap:1.4rem; justify-items:start; }
+  .acc { padding-block: clamp(2.5rem, 7vh, 5rem) clamp(4rem,10vh,8rem); max-inline-size:62ch; display:grid; gap:1.4rem; justify-items:start; }
   h1 { margin:0; font-family: var(--font-display); font-weight:300; font-size: clamp(2.4rem,6vw,4.4rem); color:#EDE7DA; }
   .acc :global(.a-divider) { inline-size: min(320px,60%); }
   .lede { margin:0; font-family: var(--font-display); font-size:1.05rem; line-height:1.9; color: var(--silver); }

@@ -1,13 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
-import SiteHeader from '../components/SiteHeader.astro';
+import SalonHeader from '../components/hero/SalonHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import AtelierScene from '../components/AtelierScene.astro';
 import GhostButton from '../components/primitives/GhostButton.astro';
 import Divider from '../components/primitives/Divider.astro';
 ---
 <Base title="Bespoke — MiLAEDiA" description="Commission a rug woven to your room, palette and dimensions.">
-  <SiteHeader />
+  <SalonHeader />
   <main id="main" class="frame">
     <header class="hd">
       <div class="hdtext">
@@ -116,7 +116,7 @@ import Divider from '../components/primitives/Divider.astro';
 
 <style>
   .hd { display:grid; grid-template-columns: minmax(0,1fr) minmax(0,.9fr); gap: clamp(1.5rem,5vw,4rem);
-    align-items:center; padding-block: clamp(90px,14vh,170px) clamp(2rem,5vh,3.5rem); }
+    align-items:center; padding-block: clamp(2.5rem, 7vh, 5rem) clamp(2rem,5vh,3.5rem); }
   .hdtext { display:grid; gap:1.1rem; justify-items:start; }
   .eyebrow { margin:0; font-family: var(--font-display); font-size: var(--type-descriptor);
     letter-spacing: var(--track-cities); text-transform:uppercase; color: var(--bronze); }

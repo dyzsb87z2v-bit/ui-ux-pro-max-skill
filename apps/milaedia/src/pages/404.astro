@@ -1,12 +1,12 @@
 ---
 import Base from '../layouts/Base.astro';
-import SiteHeader from '../components/SiteHeader.astro';
+import SalonHeader from '../components/hero/SalonHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import GhostButton from '../components/primitives/GhostButton.astro';
 import Divider from '../components/primitives/Divider.astro';
 ---
 <Base title="Page not found — MiLAEDiA" description="This page does not exist.">
-  <SiteHeader />
+  <SalonHeader />
   <main id="main" class="frame nf">
     <p class="code" data-uppercase>404</p>
     <h1>This page has been rehung</h1>
@@ -24,7 +24,7 @@ import Divider from '../components/primitives/Divider.astro';
 </Base>
 <style>
   .nf {
-    padding-block: clamp(90px, 16vh, 190px) clamp(4rem, 10vh, 8rem);
+    padding-block: clamp(3rem, 9vh, 6rem) clamp(4rem, 10vh, 8rem);
     max-inline-size: 60ch; display: grid; gap: 1.3rem; justify-items: start;
   }
   .code {

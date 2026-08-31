@@ -1,12 +1,12 @@
 ---
 import Base from '../layouts/Base.astro';
-import SiteHeader from '../components/SiteHeader.astro';
+import SalonHeader from '../components/hero/SalonHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import GhostButton from '../components/primitives/GhostButton.astro';
 import Ornament from '../components/primitives/Ornament.astro';
 ---
 <Base title="Order received — MiLAEDiA" description="Your request has been recorded.">
-  <SiteHeader />
+  <SalonHeader />
   <main id="main" class="frame conf">
     <Ornament variant="medallion" size="4.5rem" class="conf-mark" />
     <h1>Thank you</h1>
@@ -24,7 +24,7 @@ import Ornament from '../components/primitives/Ornament.astro';
 
 <style>
   .conf { display:grid; justify-items:center; text-align:center; gap:1.4rem;
-    padding-block: clamp(110px,18vh,220px) clamp(4rem,10vh,8rem); max-inline-size: 56ch; margin-inline:auto; }
+    padding-block: clamp(3rem, 8vh, 6rem) clamp(4rem,10vh,8rem); max-inline-size: 56ch; margin-inline:auto; }
   .conf :global(.conf-mark) { color: var(--gold); }
   h1 { margin:0; font-family: var(--font-display); font-weight:300;
     font-size: clamp(2.2rem,5.5vw,4rem); color:#EDE7DA; }
