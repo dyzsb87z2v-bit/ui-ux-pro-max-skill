@@ -19,6 +19,20 @@ import Base from '../../layouts/Base.astro';
 import { collections } from '../../data/site';
 import { products } from '../../data/catalogue';
 
+/**
+ * The admin lives at ADMIN_PATH, not at a guessable /admin. Set it in the
+ * host's environment variables the same way SITE_URL is set. Exactly one page
+ * is generated -- there is no catch-all and no other route is shadowed.
+ *
+ * This is obscurity, not authentication, and it is not pretending otherwise:
+ * the page still cannot do anything without a token. It removes the page from
+ * casual discovery. Real access control is Cloudflare Access in front of the
+ * route, which only the account owner can configure.
+ */
+export function getStaticPaths() {
+  return [{ params: { adminSlug: process.env.ADMIN_PATH || 'admin' } }];
+}
+
 const collectionSlugs = collections.map((c) => ({ slug: c.slug, title: c.title }));
 const shipped = products.length;
 ---
@@ -47,8 +61,8 @@ const shipped = products.length;
         repository. It stays in this browser and is sent only to GitHub.
       </p>
       <div class="grid2">
-        <label>Owner<input data-f="owner" value="dyzsb87z2v-bit" autocomplete="off" spellcheck="false" /></label>
-        <label>Repository<input data-f="repo" value="MiLAEDiaaaa" autocomplete="off" spellcheck="false" /></label>
+        <label>Owner<input data-f="owner" placeholder="github-username" autocomplete="off" spellcheck="false" /></label>
+        <label>Repository<input data-f="repo" placeholder="repository-name" autocomplete="off" spellcheck="false" /></label>
       </div>
       <label>Branch<input data-f="branch" value="main" autocomplete="off" spellcheck="false" /></label>
       <label>Token
