@@ -34,8 +34,14 @@ const {
   tail = 'Heritage in Every Knot.',
 } = Astro.props;
 ---
-<section class="salon" aria-labelledby="salon-title">
-  <div class="plate" aria-hidden="true">
+<section class="salon" aria-labelledby="salon-title" data-depth-stage data-salon>
+  {/* Four real planes at four depths. The photograph is a single flat image,
+      so nothing here pretends to have separated its foreground from its
+      background — that would need mattes this plate cannot yield. The depth
+      is between the photograph, the scrim and the type, which ARE separable,
+      and it is the same engine the atelier scene uses: one rAF loop, custom
+      properties only, no library. */}
+  <div class="plate" aria-hidden="true" data-depth="4">
     <Picture
       src={salon} alt="" widths={[760, 1264]} sizes="100vw"
       formats={['avif']} fallbackFormat="webp" quality={80} loading="eager"
@@ -44,10 +50,10 @@ const {
   {/* Scrim, not decoration: the reference's left third measures median
       luminance 9.5 while the right side reaches 90+. On narrow viewports the
       type crosses into the bright half, so the scrim steepens there. */}
-  <div class="scrim" aria-hidden="true"></div>
+  <div class="scrim" aria-hidden="true" data-depth="3"></div>
 
-  <div class="copy">
-    <h1 id="salon-title" class="wordmark">MiLAEDiA</h1>
+  <div class="copy" data-depth="2">
+    <h1 id="salon-title" class="wordmark" data-depth="1">MiLAEDiA</h1>
     <p class="eyebrow" data-uppercase>{eyebrow}</p>
     <p class="kind" data-uppercase>Silk Tapestries</p>
 
@@ -82,9 +88,30 @@ const {
     overflow: clip;
     background: var(--ground);
     isolation: isolate;
+
+    /* The camera. 2200px is a long lens: depth reads as separation, never as
+       a fish-eye. Yaw/pitch come from the shared engine and are capped at
+       ~2 degrees, so nothing swings. */
+    perspective: 2200px;
+    perspective-origin: 30% 50%;
+    transform-style: preserve-3d;
+    transform: rotateY(var(--cam-yaw, 0deg)) rotateX(var(--cam-pitch, 0deg));
   }
 
-  .plate { position: absolute; inset: 0; z-index: 0; }
+  /* Every plane composes the engine's --dx/--dy with its OWN translateZ.
+     Writing `transform` from JS instead would wipe the Z placement — that is
+     why the engine only ever writes custom properties. */
+  .plate,
+  .scrim,
+  .copy,
+  .wordmark { will-change: transform; }
+
+  .plate {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    transform: translate3d(var(--dx, 0), var(--dy, 0), -90px) scale(1.11);
+  }
   .plate :global(img) {
     inline-size: 100%;
     block-size: 100%;
@@ -96,6 +123,7 @@ const {
     position: absolute;
     inset: 0;
     z-index: 1;
+    transform: translate3d(var(--dx, 0), var(--dy, 0), -52px) scale(1.06);
     background:
       linear-gradient(90deg, rgba(0,0,0,.86) 0%, rgba(0,0,0,.62) 26%,
                              rgba(0,0,0,.18) 52%, rgba(0,0,0,0) 72%),
@@ -111,6 +139,8 @@ const {
     justify-items: start;
     padding-inline: var(--gutter);
     padding-block: clamp(2rem, 6vh, 5rem);
+    transform: translate3d(var(--dx, 0), var(--dy, 0), 0);
+    transform-style: preserve-3d;
   }
 
   /* ---- wordmark: cap 67px at 1536 = 6.12vw ---- */
@@ -127,6 +157,8 @@ const {
     background-clip: text;
     -webkit-text-fill-color: transparent;
     text-wrap: nowrap;
+    /* the only element that leaves the copy plane, and only by 26px */
+    transform: translate3d(var(--dx, 0), var(--dy, 0), 26px);
   }
 
   /* ---- eyebrow: cap 15px = 1.24vw ---- */
@@ -191,10 +223,17 @@ const {
     text-transform: uppercase;
     text-decoration: none;
     white-space: nowrap;
+    transform: translateZ(0);
     transition:
       background-color 320ms var(--ease-cinematic),
       border-color 320ms var(--ease-cinematic),
-      color 320ms var(--ease-cinematic);
+      color 320ms var(--ease-cinematic),
+      transform 320ms var(--ease-cinematic),
+      box-shadow 320ms var(--ease-cinematic);
+  }
+  .cta:hover, .cta:focus-visible {
+    transform: translate3d(0, -2px, 14px);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
   }
   .cta svg { inline-size: 1.5em; block-size: auto; flex: 0 0 auto; }
 
@@ -233,12 +272,25 @@ const {
 
   /* ---- narrow viewports: an intentional layout, not a squeezed desktop ---- */
   @media (max-width: 900px) {
-    .plate :global(img) { object-position: 70% 46%; }
+    /* The rug IS the product; it cannot be scrimmed away. Two stacked
+       gradients multiplied to ~92% black here and erased the room, so this is
+       ONE gradient, weighted to the band the type occupies and clearing over
+       the lower half where the floor rug reads. */
+    .plate :global(img) { object-position: 58% 40%; }
     .scrim {
-      background:
-        linear-gradient(180deg, rgba(0,0,0,.72) 0%, rgba(0,0,0,.42) 40%, rgba(0,0,0,.86) 100%),
-        linear-gradient(90deg,  rgba(0,0,0,.70) 0%, rgba(0,0,0,.30) 60%, rgba(0,0,0,.15) 100%);
+      background: linear-gradient(
+        180deg,
+        rgba(0,0,0,.78) 0%,
+        rgba(0,0,0,.66) 38%,
+        rgba(0,0,0,.34) 58%,
+        rgba(0,0,0,.20) 74%,
+        rgba(0,0,0,.66) 100%
+      );
     }
+    /* Type sits in the upper band rather than dead-centre, which left a large
+       empty pocket under the place line at 390px. */
+    .salon { align-items: start; }
+    .copy { padding-block-start: clamp(2.5rem, 9vh, 5rem); }
     .wordmark { font-size: clamp(2.6rem, 12.5vw, 4.4rem); }
     .eyebrow  { font-size: clamp(0.6rem, 2.5vw, 0.86rem); letter-spacing: 0.18em; }
     .kind     { font-size: clamp(1.35rem, 5.6vw, 2rem); }
@@ -248,5 +300,38 @@ const {
     .acts { inline-size: 100%; gap: 10px; }
     .cta  { inline-size: 100%; }
   }
-  @media (prefers-reduced-motion: reduce) { .cta { transition: none; } }
+  /* The engine stamps this when it bails -- reduced motion, Save-Data, or a
+     coarse low-memory device. The composition must stay correct without it. */
+  .salon[data-depth-static] { perspective: none; transform: none; }
+  .salon[data-depth-static] .plate,
+  .salon[data-depth-static] .scrim,
+  .salon[data-depth-static] .copy,
+  .salon[data-depth-static] .wordmark { transform: none; }
+  .salon[data-depth-static] .plate { scale: 1.02; }
+
+  /* Mobile is not a scaled-down desktop: the 3D is removed, not reduced.
+     A phone gains nothing from a 2-degree camera it cannot point. */
+  @media (max-width: 900px) {
+    .salon { perspective: none; transform: none; }
+    .plate, .scrim, .copy, .wordmark { transform: none; will-change: auto; }
+    .plate { scale: 1.02; }
+    .cta:hover, .cta:focus-visible { transform: none; box-shadow: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cta { transition: none; }
+    .salon { perspective: none; transform: none; }
+    .plate, .scrim, .copy, .wordmark { transform: none; }
+  }
 </style>
+
+<script>
+  import { initDepth, prefersLessMotion } from '../../lib/depth';
+
+  for (const stage of document.querySelectorAll<HTMLElement>('[data-salon]')) {
+    // Gentler than the atelier scene: this is a first screen a visitor reads,
+    // not a set piece they watch. 12px of travel and ~1.6 degrees of camera.
+    initDepth(stage, { maxShift: 12, maxTilt: 1.6, drift: 4 });
+    if (prefersLessMotion()) stage.setAttribute('data-depth-static', '');
+  }
+</script>
