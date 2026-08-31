@@ -52,6 +52,15 @@ img, video { display: block; max-inline-size: 100%; block-size: auto; }
 }
 
 /* ---- type helpers ---------------------------------------- */
+
+/* `data-uppercase` marks the type the reference sets in caps. It was applied
+   in 30 files but never defined -- the only rule naming it was the RTL
+   override in tokens.css, which made that override dead code too. Components
+   that also set text-transform in their own scoped styles are unaffected. */
+[data-uppercase] {
+  text-transform: uppercase;
+}
+
 .u-caps {
   text-transform: uppercase;
   font-variant-numeric: lining-nums tabular-nums;

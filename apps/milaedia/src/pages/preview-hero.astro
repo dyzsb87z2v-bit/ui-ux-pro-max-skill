@@ -1,0 +1,14 @@
+---
+/**
+ * Isolated render of the new first screen, so it can be compared against the
+ * reference pixel-for-pixel before it replaces anything on /home.
+ * Deleted once the redesign lands.
+ */
+import Base from '../layouts/Base.astro';
+import SalonHeader from '../components/hero/SalonHeader.astro';
+import SalonHero from '../components/hero/SalonHero.astro';
+---
+<Base title="MiLAEDiA — Timeless Beauty. Heritage in Every Knot.">
+  <SalonHeader current="/home" />
+  <main id="main"><SalonHero /></main>
+</Base>
