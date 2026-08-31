@@ -1,0 +1,360 @@
+---
+/**
+ * The redesigned homepage.
+ *
+ * Sections come from what the business actually has — five real collections,
+ * the real catalogue, the atelier footage, the real Berlin phone number. No
+ * section exists to fill space.
+ *
+ * Rhythm is deliberate: the statement and the atelier hold still while the
+ * collections, the pieces and the consultation move. A page where everything
+ * animates reads as restless, which is the opposite of the reference.
+ */
+import Base from '../layouts/Base.astro';
+import SalonHeader from '../components/hero/SalonHeader.astro';
+import SalonHero from '../components/hero/SalonHero.astro';
+import DepthPlate from '../components/hero/DepthPlate.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import CollectionCard from '../components/CollectionCard.astro';
+import ProductCard from '../components/ProductCard.astro';
+import Ornament from '../components/primitives/Ornament.astro';
+import { brand, collections, trust } from '../data/site';
+import { products } from '../data/catalogue';
+import { collectionImages, scene } from '../lib/images';
+
+const featured = products.filter((p) => !p.soldAt).slice(0, 3);
+const phone = '+49 163 6207202';
+---
+<Base
+  title={`${brand.wordmark} — Timeless Beauty. Heritage in Every Knot.`}
+  description="Antique, handwoven silk and luxury Persian rugs and silk tapestries. Berlin-based, Persian heritage, worldwide."
+>
+  <SalonHeader current="/home" />
+
+  <main id="main">
+    <!-- 1 — HERO -->
+    <SalonHero />
+
+    <!-- 2 — BRAND STATEMENT. Holds still on purpose: the eye needs somewhere
+         to rest after the hero before the page starts moving again. -->
+    <section class="statement">
+      <div class="wrap">
+        <Ornament variant="medallion" size="2.2em" class="st-mark" />
+        <p class="st-text">
+          A rug is the slowest object in a room. It is made one knot at a time,
+          by hand, over months — and then it stays for a generation. MiLAEDiA
+          sources and commissions pieces worth that patience.
+        </p>
+        <p class="st-by" data-uppercase>Berlin · Persian heritage · Worldwide</p>
+      </div>
+    </section>
+
+    <!-- 3 — COLLECTIONS -->
+    <section class="band" data-reveal>
+      <div class="wrap">
+        <header class="head">
+          <p class="eye" data-uppercase>Collections</p>
+          <h2 class="h2">Where to begin</h2>
+          <p class="lede">
+            Five collections, hand-authored. Antique pieces carrying a century of
+            use, contemporary weaving from named workshops, and pictorial silk
+            made for the wall.
+          </p>
+        </header>
+        <div class="coll-grid">
+          {collections.map((c, i) => (
+            <div data-reveal data-reveal-index={i}><CollectionCard collection={c} images={collectionImages} eager={i < 2} /></div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 — VISUAL STORYTELLING: the atelier. A full-width moment, and the
+         second still point in the page. -->
+    <section class="story">
+      <div class="wrap story-grid">
+        <div class="story-copy" data-reveal>
+          <p class="eye" data-uppercase>The atelier</p>
+          <h2 class="h2">Every knot is a decision</h2>
+          <p class="body">
+            A single piece can take a weaver the better part of a year. The
+            pattern is held in memory and in the hands of people who learned it
+            from the people who taught them. Nothing about it can be hurried.
+          </p>
+          <p class="body">
+            We work with named workshops rather than anonymous supply, so a
+            piece can be traced to the loom it came from.
+          </p>
+          <a class="link" href="/workshop">See the workshop</a>
+        </div>
+        <DepthPlate
+          src={scene.weaver}
+          alt="A weaver at the loom, working on a handmade Persian rug."
+          side="left" ratio="16 / 11"
+          eyebrow="At the loom"
+          caption="Hand-knotted, one row at a time."
+          class="story-plate"
+        />
+      </div>
+    </section>
+
+    <!-- 5 — SELECTED PIECES -->
+    <section class="band" data-reveal>
+      <div class="wrap">
+        <header class="head">
+          <p class="eye" data-uppercase>Selected pieces</p>
+          <h2 class="h2">From the house</h2>
+        </header>
+        <div class="prod-grid">
+          {featured.map((p, i) => (
+            <div data-reveal data-reveal-index={i}><ProductCard product={p} /></div>
+          ))}
+        </div>
+        <a class="link more" href="/collections">All five collections</a>
+      </div>
+    </section>
+
+    <!-- 6 — PREMIUM FEATURE: what the house actually guarantees. Real values
+         from site.ts, not invented claims. -->
+    <section class="band trust" data-reveal>
+      <div class="wrap">
+        <ul class="trust-row">
+          {trust.map((t, i) => (
+            <li data-reveal data-reveal-index={i}>
+              <span class="t-head" data-uppercase>{t.heading}</span>
+              <span class="t-body">{t.body}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <!-- 7 — CTA: the consultation, with the real number. -->
+    <section class="cta-band" data-reveal>
+      <div class="cta-plate">
+        <div class="cta-copy">
+          <p class="eye" data-uppercase>Private consultation</p>
+          <h2 class="h2">Bring us the room</h2>
+          <p class="body">
+            Dimensions and a photograph are enough to begin. We will tell you what
+            suits it, what it should cost, and how long it takes.
+          </p>
+          <div class="cta-acts">
+            <a class="btn btn-solid" href="/custom">Begin a commission</a>
+            <a class="btn btn-ghost" href={`tel:${phone.replace(/\s/g, '')}`}>{phone}</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <SiteFooter />
+</Base>
+
+<style>
+  /* ---- shared editorial rhythm ---- */
+  .wrap {
+    inline-size: min(100% - 2 * clamp(20px, 3.91vw, 60px), 1500px);
+    margin-inline: auto;
+  }
+  .band { padding-block: clamp(4rem, 11vh, 9rem); }
+  .head {
+    display: grid; gap: 0.9rem;
+    max-inline-size: 56ch;
+    margin-block-end: clamp(2rem, 5vh, 3.6rem);
+  }
+  .eye {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities);
+    color: var(--bronze);
+  }
+  .h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: clamp(1.9rem, 3.6vw, 3.4rem);
+    line-height: 1.06;
+    color: #EDE7DA;
+    text-wrap: balance;
+  }
+  .lede, .body {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(0.95rem, 1.15vw, 1.1rem);
+    line-height: 1.85;
+    color: var(--silver);
+    max-inline-size: 60ch;
+  }
+  .link {
+    justify-self: start;
+    font-family: var(--font-display);
+    font-size: var(--type-card-link);
+    letter-spacing: var(--track-nav);
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--gold);
+    border-block-end: 1px solid var(--hairline);
+    padding-block-end: 3px;
+    transition: color 240ms var(--ease-cinematic), border-color 240ms var(--ease-cinematic);
+  }
+  .link:hover, .link:focus-visible { color: var(--gold-hi); border-color: var(--gold); }
+  .more { display: inline-block; margin-block-start: clamp(1.6rem, 4vh, 2.6rem); }
+
+  /* ---- 2. statement: a still point, centred, no motion ---- */
+  .statement {
+    padding-block: clamp(5rem, 15vh, 12rem);
+    background: var(--ground);
+    border-block-end: 1px solid var(--hairline-soft, #241F19);
+  }
+  .statement .wrap {
+    display: grid; justify-items: center; gap: 1.6rem;
+    text-align: center;
+    max-inline-size: 72ch;
+  }
+  .statement :global(.st-mark) { color: var(--bronze); }
+  .st-text {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: clamp(1.3rem, 2.35vw, 2.2rem);
+    line-height: 1.55;
+    color: var(--gold);
+    text-wrap: balance;
+  }
+  .st-by {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities);
+    color: var(--silver);
+    opacity: 0.75;
+  }
+
+  /* ---- 3. collections ----
+     Five across, which is what CollectionCard's own `sizes="20vw"` declares.
+     An earlier asymmetric grid gave the first two cards 50vw and stretched a
+     260px source to ~700px -- the same upscale defect already fixed on the
+     product cards. The card's measured anatomy (118x180 in a 1143 frame) is
+     a narrow plate; widening it is not an editorial choice, it is blur. */
+  .coll-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: clamp(14px, 1.6vw, 26px);
+  }
+
+  /* ---- 4. story: asymmetric split ---- */
+  .story { padding-block: clamp(4rem, 11vh, 9rem); background: var(--panel); }
+  .story-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: center;
+  }
+  .story-copy { display: grid; gap: 1.1rem; align-content: center; }
+
+  /* ---- 5. pieces ---- */
+  .prod-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(14px, 1.6vw, 26px);
+  }
+
+  /* ---- 6. trust ---- */
+  .trust { padding-block: clamp(3rem, 8vh, 6rem); border-block: 1px solid var(--hairline-soft, #241F19); }
+  .trust-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: clamp(1.6rem, 3vw, 3.4rem);
+    list-style: none; margin: 0; padding: 0;
+  }
+  .trust-row li { display: grid; gap: 0.5em; }
+  .t-head {
+    font-family: var(--font-display);
+    font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities);
+    color: var(--bronze);
+  }
+  .t-body {
+    font-family: var(--font-display);
+    font-size: var(--type-card-link);
+    line-height: 1.8;
+    color: var(--silver);
+  }
+
+  /* ---- 7. CTA ---- */
+  .cta-band { padding-block: clamp(4rem, 11vh, 9rem); }
+  .cta-plate {
+    inline-size: min(100% - 2 * clamp(20px, 3.91vw, 60px), 1500px);
+    margin-inline: auto;
+    padding: clamp(2rem, 5vw, 4.5rem);
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-card);
+  }
+  .cta-copy { display: grid; gap: 1.1rem; max-inline-size: 60ch; }
+  .cta-acts { display: flex; flex-wrap: wrap; gap: clamp(12px, 1.7vw, 22px); margin-block-start: 0.8rem; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-block-size: 52px; padding-inline: clamp(1.1rem, 2vw, 1.8rem);
+    font-family: var(--font-display);
+    font-size: clamp(0.7rem, 0.95vw, 0.9rem);
+    letter-spacing: var(--track-cta);
+    text-transform: uppercase; text-decoration: none;
+    transform: translateZ(0);
+    transition: transform 320ms var(--ease-cinematic),
+                box-shadow 320ms var(--ease-cinematic),
+                background-color 320ms var(--ease-cinematic),
+                border-color 320ms var(--ease-cinematic),
+                color 320ms var(--ease-cinematic);
+  }
+  .btn-solid { background: var(--gold-scene); color: #FDEAC2; border: 1px solid var(--gold-scene); }
+  .btn-solid:hover, .btn-solid:focus-visible { background: #B9843F; border-color: #B9843F; }
+  .btn-ghost { background: transparent; color: var(--silver-hi); border: 1px solid var(--hairline); }
+  .btn-ghost:hover, .btn-ghost:focus-visible { color: var(--gold-hi); border-color: var(--gold); }
+  .btn:hover, .btn:focus-visible { transform: translate3d(0, -2px, 0); box-shadow: 0 10px 26px rgba(0,0,0,.5); }
+
+  /* ---- reveal: transform + opacity only, both GPU-friendly ---- */
+  [data-reveal] {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+    transition:
+      opacity 720ms var(--ease-cinematic) var(--reveal-delay, 0ms),
+      transform 720ms var(--ease-cinematic) var(--reveal-delay, 0ms);
+  }
+  [data-reveal][data-revealed] { opacity: 1; transform: none; }
+
+  /* ---- responsive: intentional layouts, not a squeeze ---- */
+  @media (max-width: 1100px) {
+    .coll-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .prod-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 820px) {
+    .coll-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 900px) {
+    .story-grid { grid-template-columns: 1fr; gap: 2rem; }
+    /* image first on narrow: the photograph is the hook, the copy follows */
+    .story-grid :global(.story-plate) { order: -1; }
+  }
+  @media (max-width: 560px) {
+    /* Two narrow plates read better than one huge one, and keep the 260px
+       source near 1:1 instead of stretching it across the whole screen. */
+    .coll-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .prod-grid { grid-template-columns: 1fr; }
+    .cta-acts .btn { inline-size: 100%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal] { opacity: 1; transform: none; transition: none; }
+    .btn { transition: none; }
+    .btn:hover, .btn:focus-visible { transform: none; box-shadow: none; }
+  }
+</style>
+
+<script>
+  import { initReveal, initScrollDepth } from '../lib/reveal';
+  initReveal();
+  initScrollDepth();
+</script>

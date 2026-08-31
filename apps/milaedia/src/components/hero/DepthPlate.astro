@@ -1,0 +1,131 @@
+---
+/**
+ * DepthPlate — an editorial image that sits in space rather than on the page.
+ *
+ * Three real surfaces, the same philosophy as the hero: a photograph behind,
+ * a hairline frame in front of it, and a caption card nearest the viewer.
+ * Scroll drives --scroll-y, which each surface composes with its OWN
+ * translateZ in CSS — the script never writes `transform`, so the Z placement
+ * survives.
+ *
+ * Long lens (2400px) and small travel: this is separation, not a wobble.
+ */
+import { Picture } from 'astro:assets';
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  /** 'left' puts the caption on the inside edge; mirrored for 'right'. */
+  side?: 'left' | 'right';
+  eyebrow?: string;
+  caption?: string;
+  ratio?: string;
+  class?: string;
+  widths?: number[];
+}
+const {
+  src, alt, side = 'left', eyebrow, caption,
+  ratio = '4 / 3', class: cls = '', widths = [420, 760, 1100],
+} = Astro.props;
+---
+<figure class={`dp dp-${side} ${cls}`} data-scroll-depth style={`--ratio:${ratio}`}>
+  <div class="dp-img">
+    <Picture src={src} alt={alt} widths={widths} sizes="(max-width: 900px) 92vw, 48vw"
+             formats={['avif']} fallbackFormat="webp" quality={78} loading="lazy" />
+  </div>
+  <span class="dp-frame" aria-hidden="true"></span>
+  {(eyebrow || caption) && (
+    <figcaption class="dp-cap">
+      {eyebrow && <span class="dp-eye" data-uppercase>{eyebrow}</span>}
+      {caption && <span class="dp-text">{caption}</span>}
+    </figcaption>
+  )}
+</figure>
+
+<style>
+  .dp {
+    position: relative;
+    margin: 0;
+    perspective: 2400px;
+    perspective-origin: 50% 50%;
+    transform-style: preserve-3d;
+  }
+
+  .dp-img {
+    position: relative;
+    aspect-ratio: var(--ratio);
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    background: var(--panel);
+    /* Furthest surface: least travel. Overscanned so the drift never reveals
+       an edge. */
+    transform: translate3d(0, calc(var(--scroll-y, 0) * -14px), -60px) scale(1.06);
+  }
+  .dp-img :global(img) {
+    inline-size: 100%; block-size: 100%;
+    object-fit: cover;
+  }
+
+  /* The frame is a separate surface in front of the photograph — that gap is
+     what makes the image read as recessed rather than pasted on. */
+  .dp-frame {
+    position: absolute;
+    inset: clamp(8px, 1.1vw, 16px);
+    border: 1px solid var(--hairline);
+    border-radius: calc(var(--radius-card) - 2px);
+    pointer-events: none;
+    transform: translate3d(0, calc(var(--scroll-y, 0) * -6px), -18px);
+  }
+
+  .dp-cap {
+    position: absolute;
+    inset-block-end: clamp(-14px, -1.2vw, -10px);
+    inset-inline-start: clamp(14px, 2vw, 26px);
+    display: grid;
+    gap: 0.35em;
+    max-inline-size: min(30ch, 78%);
+    padding: clamp(0.7rem, 1.2vw, 1rem) clamp(0.9rem, 1.6vw, 1.4rem);
+    background: rgba(10, 8, 6, 0.92);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-card);
+    /* Nearest surface, and the only one that comes forward of the page. */
+    transform: translate3d(0, calc(var(--scroll-y, 0) * 8px), 34px);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+  }
+  .dp-right .dp-cap {
+    inset-inline-start: auto;
+    inset-inline-end: clamp(14px, 2vw, 26px);
+  }
+  .dp-eye {
+    font-family: var(--font-display);
+    font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities);
+    color: var(--bronze);
+  }
+  .dp-text {
+    font-family: var(--font-display);
+    font-size: var(--type-card-link);
+    line-height: 1.7;
+    color: var(--silver-hi);
+  }
+
+  /* Mobile: the surfaces stay, the camera goes. Same rule as the hero — a
+     phone gains nothing from a perspective it cannot point, and the caption
+     needs the width more than it needs the lift. */
+  @media (max-width: 900px) {
+    .dp { perspective: none; }
+    .dp-img, .dp-frame, .dp-cap { transform: none; }
+    .dp-img { scale: 1; }
+    .dp-cap {
+      position: static;
+      max-inline-size: none;
+      margin-block-start: 0.9rem;
+      box-shadow: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dp-img, .dp-frame, .dp-cap { transform: none; }
+    .dp-img { scale: 1; }
+  }
+</style>
