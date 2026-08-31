@@ -28,7 +28,7 @@ const hero = collectionImages[c.slug];
         <p class="count">{items.length} {items.length === 1 ? 'piece' : 'pieces'}</p>
       </div>
       <div class="cart-img">
-        <Picture src={hero} alt="" widths={[420, 840]} sizes="42vw"
+        <Picture src={hero} alt="" widths={[320, 560]} sizes="320px"
                  formats={['avif']} fallbackFormat="webp" quality={66} loading="eager" />
       </div>
     </header>
@@ -83,9 +83,15 @@ const hero = collectionImages[c.slug];
   .ctext :global(.chead-divider) { inline-size: min(300px,70%); }
   .count { margin:0; font-family: var(--font-display); font-size: var(--type-card-link);
     letter-spacing: var(--track-nav); text-transform: uppercase; color: var(--gold); }
+  /* Matted, like the cards and the rug viewer. The collection sources are
+     260px native; stretching one across 580px is the same upscale blur
+     already fixed twice elsewhere. Held near 1:1 it is sharp, and the dark
+     surround is the house's own plate treatment. */
   .cart-img { border: var(--border) solid var(--hairline); border-radius: var(--radius);
-    overflow:hidden; aspect-ratio: 5/4; }
-  .cart-img :global(img) { inline-size:100%; block-size:100%; object-fit:cover; }
+    overflow:hidden; aspect-ratio: 5/4; background: var(--panel);
+    display:grid; place-items:center; }
+  .cart-img :global(img) { inline-size: min(100%, 320px); block-size:auto;
+    aspect-ratio: 5/4; object-fit:cover; border-radius: 2px; }
 
   .toolbar { display:flex; justify-content:space-between; align-items:center; gap:1.5rem;
     flex-wrap:wrap; padding-block: 1.2rem; border-block: 1px solid var(--hairline-soft); }
