@@ -143,6 +143,45 @@ const esc = (s) => s
   .replace(/<\/script/gi, '<\\/script')
   .replace(/[\u007f-\uffff]/g, (c) => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
 
+/**
+ * PUBLIC-SHARE SAFETY (preview transport only -- never written to src/).
+ *
+ * Two routes ask a visitor for real personal data: /checkout takes a name,
+ * email and full postal address, /custom takes commission details. In the
+ * live deployment those forms are real. In a shared link they are not, and
+ * a stranger opening the URL has no way to know that before typing.
+ *
+ * So the packager -- not the site -- puts an unmissable notice directly
+ * above each form. It is built from the measured tokens the rest of the
+ * house uses, so it reads as part of the page rather than a foreign banner.
+ */
+const FORM_NOTICE = `<aside class="demo-note" role="note">
+  <p class="demo-note-k">Demonstration</p>
+  <p class="demo-note-b">This is a design demonstration, not a live shop. Nothing you type here is sent anywhere &mdash; it stays in this browser tab and is discarded when you close it. Please do not enter real personal details.</p>
+</aside>
+<style>
+  .demo-note {
+    /* The forms it is injected into are grid/flex containers, so it has to
+       claim the full row rather than becoming a column of its own. */
+    grid-column: 1 / -1; flex: 1 0 100%;
+    display: grid; gap: 0.4em;
+    margin-block-end: clamp(1.4rem, 3vh, 2.4rem);
+    padding: clamp(0.9rem, 2vw, 1.3rem) clamp(1rem, 2.2vw, 1.5rem);
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-inline-start: 2px solid var(--bronze);
+    border-radius: var(--radius-card);
+  }
+  .demo-note-k {
+    margin: 0; font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities); text-transform: uppercase; color: var(--bronze);
+  }
+  .demo-note-b {
+    margin: 0; font-family: var(--font-display); font-size: var(--type-card-link);
+    line-height: 1.8; color: var(--silver); max-inline-size: 62ch;
+  }
+</style>`;
+
 const ROUTES = [];
 for (const p of pages.sort()) {
   let html = readFileSync(p, 'utf8');
@@ -164,7 +203,17 @@ for (const p of pages.sort()) {
   html = html.replace(/location\.search/g, 'window.__search');
 
   html = html.replace(/<head>/i, '<head>' + SHIM);
-  ROUTES.push([routeOf(p), html]);
+
+  const route = routeOf(p);
+  if (route === '/checkout/' || route === '/custom/') {
+    // As the form's FIRST CHILD, not at the top of <main>: the site header is
+    // absolutely positioned over the top of the document, and <main>'s top
+    // padding belongs to the heading block. Inside the form the notice clears
+    // both, and lands where the visitor is actually about to type.
+    html = html.replace(/(<form\b[^>]*>)/i, (m) => m + FORM_NOTICE);
+  }
+
+  ROUTES.push([route, html]);
 }
 
 /* ---------- shell ---------- */

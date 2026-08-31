@@ -4,8 +4,28 @@
   html, body { height: 100%; background: #000; }
   body { margin: 0; overflow: hidden; font-family: 'Cormorant Garamond', Georgia, serif; }
 
+  /* The marker strip is permanent and sits ABOVE the site, not over it:
+     the header inside the page is absolutely positioned at its own top edge,
+     so overlaying would collide. 28px is the smallest height that stays
+     legible at the site's own descriptor size. */
+  #mark {
+    position: fixed; inset-block-start: 0; inset-inline: 0; z-index: 6;
+    display: flex; align-items: center; gap: 0.75em;
+    block-size: 28px; padding-inline: clamp(12px, 3vw, 28px);
+    background: #0A0806; border-block-end: 1px solid #4F4840;
+    font-size: 11px; line-height: 1; white-space: nowrap; overflow: hidden;
+  }
+  #mark b {
+    font-weight: 400; letter-spacing: .18em; text-transform: uppercase;
+    color: #8D5E37; flex: 0 0 auto;
+  }
+  #mark span {
+    color: #A4A4A4; letter-spacing: .02em;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+
   #stage {
-    position: fixed; inset: 0; display: grid; place-items: center;
+    position: fixed; inset: 28px 0 0; display: grid; place-items: center;
     background: #000; overflow: hidden;
   }
   #stage[data-mode="full"] { place-items: stretch; }
@@ -18,8 +38,8 @@
     border-radius: 14px;
     box-shadow: 0 0 0 1px #4F4840, 0 30px 80px rgba(0,0,0,.9);
   }
-  #stage[data-mode="tablet"] #frame { inline-size: 834px;  block-size: min(1112px, 94vh); }
-  #stage[data-mode="phone"]  #frame { inline-size: 390px;  block-size: min(844px, 94vh); }
+  #stage[data-mode="tablet"] #frame { inline-size: 834px;  block-size: min(1112px, 92vh); }
+  #stage[data-mode="phone"]  #frame { inline-size: 390px;  block-size: min(844px, 92vh); }
 
   /* ---- inspector pill ---- */
   #pill {
@@ -53,8 +73,17 @@
   }
   body[data-chrome="off"] #pill { display: none; }
   body[data-chrome="off"] #show { display: block; }
-  @media (max-width: 700px) { #route { max-inline-size: 12ch; } .wide { display: none; } }
+  @media (max-width: 700px) {
+    #route { max-inline-size: 12ch; }
+    .wide { display: none; }
+    #mark span { font-size: 10px; }
+  }
 </style>
+
+<div id="mark">
+  <b>Demonstration</b>
+  <span>Design prototype. Catalogue, prices and availability are sample data &mdash; no order is placed and nothing you type is sent anywhere.</span>
+</div>
 
 <div id="stage" data-mode="full"><iframe id="frame" title="MiLAEDiA preview"></iframe></div>
 
