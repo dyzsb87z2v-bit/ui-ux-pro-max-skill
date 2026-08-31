@@ -225,3 +225,44 @@ off disk), so the atelier scene falls back to its poster there. This is a
 property of the test browser, not of the site or the asset -- Chrome, Safari,
 Firefox and Edge all decode it. The poster fallback is the intended
 degradation and is what low-power and reduced-motion visitors see too.
+
+---
+
+## Launch QA that cannot be done from here
+
+### iOS Safari — UNVERIFIED, requires a real device
+
+Every responsive claim in this project was measured in **Chromium only** —
+that is the sole browser in the build container. iOS Safari has not been
+tested and must not be described as verified.
+
+What was done to keep the risk low, rather than to claim it away:
+
+- `100svh` on the hero, not `100vh` — Safari's collapsing toolbar makes `vh`
+  overshoot on first paint
+- 3D transforms are removed outright below 900px, not scaled down, so the
+  parts of Safari's compositor most likely to differ are never exercised on a
+  phone
+- `overflow-x: clip` on the root rather than `hidden`, so no scroll container
+  is created
+- No `backdrop-filter` on anything load-bearing (the ghost CTA uses it
+  decoratively and degrades to a flat panel)
+- Reduced-motion and Save-Data paths leave a correct static composition
+
+**Still needs a real iPhone before launch**, in this order of risk:
+
+1. Hero height on first paint and after the toolbar collapses
+2. `overflow-x: clip` on `<html>` with `position: fixed` (the nav overlay)
+3. AVIF decoding on older iOS versions — the WebP fallback should engage
+4. Momentum scrolling through the reveal sections
+5. `object-fit`/`object-position` on the hero plate at narrow widths
+
+### Measured frontend weight, first visit to /home
+
+| | transfer | requests |
+|---|---|---|
+| desktop 1440 | **383 KB** | 20 |
+| mobile 390 | **227 KB** | 17 |
+
+Total JavaScript across the whole site is **44 KB** — no framework, no 3D
+library. The depth and reveal engines are ~6 KB combined.
