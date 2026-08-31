@@ -10,8 +10,11 @@
   //
   // The dashboard reads this file, so Build command and output directory do
   // not have to be typed into the UI.
+  //
+  // `name` MUST match the Worker that already exists in the dashboard,
+  // otherwise a deploy either fails or silently creates a second Worker.
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "milaedia",
+  "name": "milaediaaaa",
   "compatibility_date": "2026-08-01",
   "assets": {
     "directory": "./dist",
