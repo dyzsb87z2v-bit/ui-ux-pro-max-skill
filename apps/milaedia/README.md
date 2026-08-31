@@ -63,15 +63,16 @@ server runtime, so any static host serves it:
 Vercel works too, but note its Hobby tier prohibits commercial use — a shop
 needs a paid plan there.
 
-**Before the first deploy, set your domain** in `astro.config.mjs`:
+**Before the first deploy, set your domain.** Add an environment variable in
+your host's dashboard -- no code change needed:
 
-```js
-site: 'https://example.invalid',   // <- replace
+```
+SITE_URL = https://your-domain.com
 ```
 
 That value is not decoration. Canonical URLs, `sitemap.xml` and the
 schema.org product data are all built from it, so search engines will index
-the placeholder if you leave it.
+`example.invalid` if you leave it unset. Locally: `SITE_URL=https://your-domain.com npm run build`.
 
 ## Where things live
 
