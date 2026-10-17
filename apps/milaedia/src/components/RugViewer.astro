@@ -1,0 +1,310 @@
+---
+/**
+ * RugViewer — the product visualisation surface.
+ *
+ * ============================================================
+ * TWO MODES, ONE COMPONENT. The mode is chosen from the data, never faked.
+ *
+ *  model  — a GLB/GLTF path exists on the product. The <model-viewer> element
+ *           is loaded lazily from the CDN and mounted into this same frame:
+ *           orbit, zoom, touch drag, fullscreen, reset, AR where supported.
+ *
+ *  plate  — no model exists. Instead of a broken or empty viewer, the frame
+ *           becomes a PERSPECTIVE INSPECTOR: the flat texture on a plane the
+ *           visitor can tilt, raise toward the light, and magnify. Every
+ *           control does something real; nothing pretends to be 3D geometry.
+ *
+ * To add a real model later: set `model` on the product record. Nothing on
+ * the product page changes. See PLACEHOLDERS.md.
+ * ============================================================
+ */
+import { Picture } from 'astro:assets';
+import Icon from './primitives/Icon.astro';
+
+interface Props {
+  image: ImageMetadata;
+  alt: string;
+  model?: string | null;
+  title: string;
+  /** Focal point for the shared collection crop (see lib/images focal). */
+  spot?: string;
+}
+const { image, alt, model = null, title, spot = '50% 50%' } = Astro.props;
+const mode = model ? 'model' : 'plate';
+---
+<section class="viewer panel" data-viewer data-mode={mode} data-model={model ?? ''}
+         aria-label={`${title} — visualisation`}>
+  <div class="frame" data-viewer-frame>
+    <!-- plate mode: a real, inspectable surface -->
+    <div class="plate" data-plate>
+      <div class="plate-inner" data-plate-inner style={`--spot:${spot}`}>
+        <Picture src={image} alt={alt}
+                 widths={[300, 420]} sizes="(max-width: 900px) 72vw, 420px"
+                 formats={['avif']} fallbackFormat="webp" quality={86} loading="eager" />
+        <span class="pile" aria-hidden="true"></span>
+      </div>
+    </div>
+    <!-- model mode mounts here -->
+    <div class="mount" data-viewer-mount hidden></div>
+    <p class="loading" data-viewer-loading hidden>Preparing model…</p>
+  </div>
+
+  <div class="controls" role="group" aria-label="Visualisation controls">
+    <button type="button" data-vc="zoom-out" aria-label="Zoom out"><span aria-hidden="true">–</span></button>
+    <button type="button" data-vc="zoom-in" aria-label="Zoom in"><span aria-hidden="true">+</span></button>
+    <button type="button" data-vc="reset" data-uppercase>Reset</button>
+    <button type="button" data-vc="full" aria-label="Fullscreen"><Icon name="expand" size="1em" /></button>
+  </div>
+
+  <p class="hint" data-viewer-hint>
+    {mode === 'model'
+      ? 'Drag to rotate · scroll or pinch to zoom'
+      : 'Drag to tilt the surface · scroll or pinch to magnify'}
+  </p>
+
+  {mode === 'plate' && (
+    <p class="mode-note">
+      Photographic inspection. A woven 3D model for this piece has not been
+      produced yet; when it is, it appears here.
+    </p>
+  )}
+</section>
+
+<style>
+  .viewer {
+    display: grid;
+    gap: 0.9rem;
+    padding: clamp(0.9rem, 2vw, 1.6rem);
+    background: var(--panel);
+  }
+
+  .frame {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    background: var(--ground);
+    perspective: 1500px;
+    touch-action: none;
+    cursor: grab;
+  }
+  .frame:active { cursor: grabbing; }
+
+  .plate {
+    /* Matted, not full-bleed. The verified crops are 260 px native; letting
+       them fill the frame upscaled them ~2.7x and read as soft. Held near
+       1:1 they are sharp, and the dark surround reads as the wall behind a
+       hung piece -- the same matted composition the references use. */
+    position: absolute;
+    inset-block: 8%;
+    inset-inline: 50%;
+    inline-size: min(78%, 420px);
+    translate: -50% 0;
+    transform-style: preserve-3d;
+    transform:
+      rotateX(var(--rx, 12deg))
+      rotateY(var(--ry, -14deg))
+      scale(var(--zoom, 1));
+    transition: transform 420ms var(--ease-cinematic);
+  }
+  .plate[data-dragging] { transition: none; }
+
+  .plate-inner {
+    position: relative;
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: 3px;
+    overflow: hidden;
+    border: var(--border) solid var(--hairline);
+  }
+  .plate-inner :global(img) {
+    inline-size: 100%; block-size: 100%; object-fit: cover;
+    object-position: var(--spot, 50% 50%);
+  }
+
+  /* The pile: a directional sheen that moves with the tilt, so the surface
+     reads as a woven pile catching light rather than as a flat photograph.
+     Amplitude is held inside the measured highlight budget. */
+  .pile {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      calc(90deg + var(--ry, -14deg) * 2),
+      rgba(231, 202, 156, 0.11) 0%,
+      transparent 42%,
+      transparent 58%,
+      rgba(0, 0, 0, 0.26) 100%
+    );
+  }
+
+  .mount { position: absolute; inset: 0; }
+  .mount[hidden] { display: none; }
+  .mount :global(model-viewer) { inline-size: 100%; block-size: 100%; background: var(--ground); }
+
+  .loading {
+    position: absolute; inset-block-end: 1rem; inset-inline: 0; margin: 0;
+    text-align: center; font-family: var(--font-display);
+    font-size: var(--type-card-link); letter-spacing: var(--track-nav);
+    text-transform: uppercase; color: var(--gold);
+  }
+
+  .controls { display: flex; gap: 0.5rem; justify-content: center; }
+  .controls button {
+    min-inline-size: 2.6em;
+    padding: 0.6em 0.95em;
+    background: none;
+    border: var(--border) solid var(--hairline);
+    border-radius: 5px;
+    color: var(--gold);
+    font-family: var(--font-display);
+    font-size: var(--type-card-link);
+    letter-spacing: var(--track-nav);
+    line-height: 1;
+    cursor: pointer;
+    transition: color 220ms var(--ease-cinematic), border-color 220ms var(--ease-cinematic);
+  }
+  .controls button:hover, .controls button:focus-visible {
+    color: var(--gold-hi); border-color: var(--gold);
+  }
+
+  .hint, .mode-note {
+    margin: 0;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: var(--type-card-link);
+    letter-spacing: 0.03em;
+    color: var(--silver);
+    opacity: 0.62;
+  }
+  .mode-note { max-inline-size: 46ch; margin-inline: auto; opacity: 0.45; }
+
+  .viewer:fullscreen { padding: 4vh 4vw; place-content: center; background: var(--ground); }
+  .viewer:fullscreen .frame { aspect-ratio: 16 / 10; max-block-size: 84vh; }
+
+  @media (prefers-reduced-motion: reduce) { .plate { transition: none; } }
+</style>
+
+<script>
+  const MODEL_VIEWER_CDN =
+    'https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-viewer]')) {
+    const frame = root.querySelector<HTMLElement>('[data-viewer-frame]')!;
+    const plate = root.querySelector<HTMLElement>('[data-plate]')!;
+    const mount = root.querySelector<HTMLElement>('[data-viewer-mount]')!;
+    const loading = root.querySelector<HTMLElement>('[data-viewer-loading]')!;
+    const model = root.dataset.model || '';
+
+    // ---- plate mode: a real perspective inspector -----------------------
+    const REST = { rx: 12, ry: -14, zoom: 1 };
+    let rx = REST.rx, ry = REST.ry, zoom = REST.zoom;
+    let dragging = false, lastX = 0, lastY = 0;
+
+    const apply = () => {
+      plate.style.setProperty('--rx', `${rx.toFixed(2)}deg`);
+      plate.style.setProperty('--ry', `${ry.toFixed(2)}deg`);
+      plate.style.setProperty('--zoom', zoom.toFixed(3));
+    };
+    const clamp = () => {
+      rx = Math.max(-42, Math.min(62, rx));
+      ry = Math.max(-58, Math.min(58, ry));
+      zoom = Math.max(0.75, Math.min(2.6, zoom));
+    };
+
+    frame.addEventListener('pointerdown', (e) => {
+      if (root.dataset.mode === 'model') return;
+      dragging = true; lastX = e.clientX; lastY = e.clientY;
+      plate.setAttribute('data-dragging', '');
+      frame.setPointerCapture(e.pointerId);
+    });
+    frame.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      ry += (e.clientX - lastX) * 0.32;
+      rx -= (e.clientY - lastY) * 0.26;
+      lastX = e.clientX; lastY = e.clientY;
+      clamp(); apply();
+    });
+    const endDrag = () => { dragging = false; plate.removeAttribute('data-dragging'); };
+    frame.addEventListener('pointerup', endDrag);
+    frame.addEventListener('pointercancel', endDrag);
+
+    frame.addEventListener('wheel', (e) => {
+      if (root.dataset.mode === 'model') return;
+      e.preventDefault();
+      zoom *= e.deltaY > 0 ? 0.93 : 1.07;
+      clamp(); apply();
+    }, { passive: false });
+
+    // Keyboard: the viewer is operable without a pointer.
+    frame.tabIndex = 0;
+    frame.setAttribute('role', 'application');
+    frame.addEventListener('keydown', (e) => {
+      const step = e.shiftKey ? 10 : 4;
+      switch (e.key) {
+        case 'ArrowLeft':  ry -= step; break;
+        case 'ArrowRight': ry += step; break;
+        case 'ArrowUp':    rx += step; break;
+        case 'ArrowDown':  rx -= step; break;
+        case '+': case '=': zoom *= 1.1; break;
+        case '-':           zoom *= 0.9; break;
+        case '0': rx = REST.rx; ry = REST.ry; zoom = REST.zoom; break;
+        default: return;
+      }
+      e.preventDefault(); clamp(); apply();
+    });
+
+    root.querySelectorAll<HTMLButtonElement>('[data-vc]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const mv = mount.firstElementChild as any;
+        switch (btn.dataset.vc) {
+          case 'zoom-in':
+            if (mv?.zoom) mv.zoom(1); else { zoom *= 1.14; clamp(); apply(); }
+            break;
+          case 'zoom-out':
+            if (mv?.zoom) mv.zoom(-1); else { zoom *= 0.88; clamp(); apply(); }
+            break;
+          case 'reset':
+            if (mv?.resetTurntableRotation) { mv.resetTurntableRotation(); mv.cameraOrbit = 'auto auto auto'; }
+            rx = REST.rx; ry = REST.ry; zoom = REST.zoom; apply();
+            break;
+          case 'full':
+            if (document.fullscreenElement) await document.exitFullscreen();
+            else await root.requestFullscreen?.().catch(() => {});
+            break;
+        }
+      });
+    });
+
+    apply();
+
+    // ---- model mode: load the renderer only when a model exists ---------
+    if (model) {
+      const io = new IntersectionObserver(async ([entry], obs) => {
+        if (!entry.isIntersecting) return;
+        obs.disconnect();
+        loading.hidden = false;
+        try {
+          await import(/* @vite-ignore */ MODEL_VIEWER_CDN);
+          const mv = document.createElement('model-viewer');
+          mv.setAttribute('src', model);
+          mv.setAttribute('camera-controls', '');
+          mv.setAttribute('touch-action', 'none');
+          mv.setAttribute('shadow-intensity', '0.55');
+          mv.setAttribute('exposure', '0.85');
+          mv.setAttribute('alt', root.getAttribute('aria-label') || '');
+          mount.appendChild(mv);
+          mount.hidden = false;
+          plate.style.display = 'none';
+        } catch {
+          // The renderer failed to load. Keep the plate inspector — never
+          // leave a broken or empty viewer on the page.
+          root.dataset.mode = 'plate';
+        } finally {
+          loading.hidden = true;
+        }
+      }, { rootMargin: '25%' });
+      io.observe(root);
+    }
+  }
+</script>

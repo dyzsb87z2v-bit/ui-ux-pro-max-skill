@@ -19,8 +19,9 @@ interface Props {
   type?: 'button' | 'submit';
   disabled?: boolean;
   class?: string;
+  [key: string]: any;
 }
-const { href, tone = 'gold', type = 'button', disabled = false, class: cls = '' } = Astro.props;
+const { href, tone = 'gold', type = 'button', disabled = false, class: cls = '', ...rest } = Astro.props;
 const Tag = href && !disabled ? 'a' : 'button';
 ---
 <Tag
@@ -31,9 +32,10 @@ const Tag = href && !disabled ? 'a' : 'button';
   type={Tag === 'button' ? type : undefined}
   disabled={Tag === 'button' && disabled ? true : undefined}
   aria-disabled={disabled ? 'true' : undefined}
+  {...rest}
 >
   <span class="edge edge-top" aria-hidden="true"></span>
-  <span class="label"><slot /></span>
+  <span class="label" data-ghost-label><slot /></span>
   <span class="edge edge-bottom" aria-hidden="true"></span>
 </Tag>
 

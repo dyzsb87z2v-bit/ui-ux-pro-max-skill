@@ -1,15 +1,17 @@
 ---
 import Base from '../layouts/Base.astro';
-import SiteHeader from '../components/SiteHeader.astro';
+import SalonHeader from '../components/hero/SalonHeader.astro';
 import Cover from '../components/Cover.astro';
+import SiteFooter from '../components/SiteFooter.astro';
 import { brand } from '../data/site';
 ---
 <Base title={`${brand.wordmark} — ${brand.tagline}`}>
   <div class="shell">
-    <SiteHeader current="/" />
+    <SalonHeader current="/" />
     <main id="main" class="frame">
       <Cover />
     </main>
+    <SiteFooter />
   </div>
 </Base>
 

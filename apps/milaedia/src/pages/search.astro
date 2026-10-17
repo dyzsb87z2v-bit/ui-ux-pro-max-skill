@@ -1,0 +1,77 @@
+---
+import Base from '../layouts/Base.astro';
+import SalonHeader from '../components/hero/SalonHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { products } from '../data/catalogue';
+import { collections } from '../data/site';
+const index = [
+  ...products.map(p => ({ t: p.title, s: `/collections/${p.collection}/${p.slug}`,
+    k: `${p.title} ${p.origin} ${p.material} ${p.weave} ${p.collection}`.toLowerCase(),
+    meta: `${p.dimensionsCm[0]} × ${p.dimensionsCm[1]} cm · ${p.origin}`, kind: 'Piece' })),
+  ...collections.map(c => ({ t: c.title, s: `/collections/${c.slug}`,
+    k: `${c.title} ${c.material} ${c.tier}`.toLowerCase(), meta: 'Collection', kind: 'Collection' })),
+];
+---
+<Base title="Search — MiLAEDiA" description="Search the house catalogue.">
+  <SalonHeader />
+  <main id="main" class="frame sr">
+    <h1>Search</h1>
+    <label class="field">
+      <span class="visually-hidden">Search pieces and collections</span>
+      <input type="search" data-q placeholder="Kashan, silk, Isfahan, tapestry…" autofocus
+             autocomplete="off" aria-controls="results" aria-describedby="count">
+    </label>
+    <p id="count" class="count" data-count aria-live="polite"></p>
+    <ul id="results" class="results" data-results role="list"></ul>
+    <p class="none" data-none hidden>No pieces match that. Try a place, a material, or a collection.</p>
+  </main>
+  <SiteFooter />
+  <script type="application/json" data-index set:html={JSON.stringify(index)} />
+</Base>
+
+<style>
+  .sr { padding-block: clamp(2.5rem, 7vh, 5rem) clamp(4rem,10vh,8rem); max-inline-size: 70ch; }
+  h1 { margin:0 0 1.5rem; font-family: var(--font-display); font-weight:300;
+    font-size: clamp(2.4rem,6vw,4.4rem); color:#EDE7DA; }
+  .field input {
+    inline-size:100%; background: var(--panel); color: var(--silver-hi);
+    border:1px solid var(--hairline); border-radius: var(--radius-card);
+    padding:1em 1.1em; font-family: var(--font-display); font-size:1.15rem;
+  }
+  .field input:focus-visible { border-color: var(--gold); }
+  .count { margin:1rem 0 0; font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-nav); text-transform:uppercase; color: var(--bronze); }
+  .results { list-style:none; margin:1.5rem 0 0; padding:0; display:grid; gap:1px;
+    background: var(--hairline-soft); border:1px solid var(--hairline-soft);
+    border-radius: var(--radius); overflow:hidden; }
+  .results:empty { display:none; }
+  .results a { display:flex; justify-content:space-between; gap:1.5rem; align-items:baseline;
+    padding:1.1rem 1.3rem; background: var(--panel); text-decoration:none; }
+  .results a:hover, .results a:focus-visible { background: var(--raised); }
+  .rt { font-family: var(--font-display); font-size: var(--type-card-title); color: var(--silver-hi); }
+  .rm { font-family: var(--font-display); font-size: var(--type-card-link); color: var(--silver); opacity:.6; }
+  .rk { font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-nav); text-transform:uppercase; color: var(--gold); }
+  .none { margin:2rem 0 0; font-family: var(--font-display); color: var(--silver); opacity:.65; }
+</style>
+
+<script>
+  const data = JSON.parse(document.querySelector('[data-index]')!.textContent!);
+  const q = document.querySelector<HTMLInputElement>('[data-q]')!;
+  const out = document.querySelector<HTMLElement>('[data-results]')!;
+  const none = document.querySelector<HTMLElement>('[data-none]')!;
+  const count = document.querySelector<HTMLElement>('[data-count]')!;
+
+  function run() {
+    const v = q.value.trim().toLowerCase();
+    if (!v) { out.innerHTML = ''; none.hidden = true; count.textContent = ''; return; }
+    const hits = data.filter((d: any) => v.split(/\s+/).every((w: string) => d.k.includes(w)));
+    out.innerHTML = hits.map((h: any) =>
+      `<li><a href="${h.s}"><span><span class="rt">${h.t}</span><br><span class="rm">${h.meta}</span></span><span class="rk">${h.kind}</span></a></li>`).join('');
+    none.hidden = hits.length > 0;
+    count.textContent = `${hits.length} ${hits.length === 1 ? 'result' : 'results'}`;
+  }
+  q.addEventListener('input', run);
+  const pre = new URLSearchParams(location.search).get('q');
+  if (pre) { q.value = pre; run(); }
+</script>

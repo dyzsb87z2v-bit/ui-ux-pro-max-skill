@@ -1,0 +1,42 @@
+---
+import Base from "../../layouts/Base.astro";
+import SalonHeader from '../../components/hero/SalonHeader.astro';
+import SiteFooter from "../../components/SiteFooter.astro";
+import Divider from "../../components/primitives/Divider.astro";
+---
+<Base title="Widerrufsbelehrung — MiLAEDiA" description="Right of withdrawal">
+  <SalonHeader />
+  <main id="main" class="frame legal">
+    <header class="lhead">
+      <p class="eyebrow" data-uppercase>Right of withdrawal</p>
+      <h1>Widerrufsbelehrung</h1>
+      <Divider class="l-divider" />
+    </header>
+    <p class="warn">Bespoke commissions likely fall under a statutory exception. This must be confirmed by counsel, not assumed.</p>
+    <div class="lbody">
+      <section class="lrow"><h2>Widerrufsrecht</h2><p>PLACEHOLDER — the statutory 14-day withdrawal notice, adapted to the actual seller and goods.</p></section>
+      <section class="lrow"><h2>Folgen des Widerrufs</h2><p>PLACEHOLDER</p></section>
+      <section class="lrow"><h2>Muster-Widerrufsformular</h2><p>PLACEHOLDER — the statutory model withdrawal form.</p></section>
+      <section class="lrow"><h2>Ausnahmen</h2><p>PLACEHOLDER — bespoke commissions are made to customer specification; the statutory exception must be stated accurately.</p></section>
+    </div>
+  </main>
+  <SiteFooter />
+</Base>
+
+<style>
+  .legal { padding-block: clamp(2.5rem, 7vh, 5rem) clamp(4rem,10vh,8rem); max-inline-size: 74ch; }
+  .lhead { display:grid; gap:1rem; margin-block-end:2rem; }
+  .eyebrow { margin:0; font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities); text-transform:uppercase; color: var(--bronze); }
+  h1 { margin:0; font-family: var(--font-display); font-weight:300;
+    font-size: clamp(2.2rem,5.5vw,4rem); line-height:1.05; color:#EDE7DA; }
+  .lhead :global(.l-divider) { inline-size: min(320px,60%); }
+  .warn { margin:0 0 2.5rem; padding:1rem 1.2rem; border:1px solid rgba(160,68,42,.45);
+    border-radius: var(--radius); background:#0D0705; font-family: var(--font-display);
+    font-size: var(--type-card-link); line-height:1.8; color:#C98A6A; }
+  .lbody { display:grid; gap:2rem; }
+  .lrow h2 { margin:0 0 .5em; font-family: var(--font-display); font-weight:400;
+    font-size:1.1rem; color:#EDE7DA; }
+  .lrow p { margin:0; font-family: var(--font-display); font-size:.98rem;
+    line-height:1.9; color: var(--silver); }
+</style>

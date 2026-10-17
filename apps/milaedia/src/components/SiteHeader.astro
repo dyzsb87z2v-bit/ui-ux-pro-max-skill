@@ -210,6 +210,18 @@ const barLinks = nav.filter((i) => i.href !== '/');
 </style>
 
 <script>
+  // Live bag count in the header.
+  import { bagCount, onBagChange } from '../lib/bag';
+  const badge = document.querySelector<HTMLElement>('[data-bag-count]');
+  const paint = () => {
+    if (!badge) return;
+    const n = bagCount();
+    badge.textContent = String(n);
+    badge.hidden = n === 0;
+  };
+  paint();
+  onBagChange(paint);
+
   // Vanilla. No framework island needed for a disclosure widget — the JS
   // budget (<=40 KB, spec §23) belongs to the intro gate and parallax.
   const trigger = document.querySelector<HTMLButtonElement>('[data-menu-open]');

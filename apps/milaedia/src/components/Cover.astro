@@ -31,6 +31,7 @@ import heroCover from '../assets/scene/window-triptych.png';
 import Ornament from './primitives/Ornament.astro';
 import Wordmark from './primitives/Wordmark.astro';
 import GhostButton from './primitives/GhostButton.astro';
+import Tagline from './primitives/Tagline.astro';
 import { brand } from '../data/site';
 ---
 <section class="cover panel scene-locked" aria-labelledby="cover-title">
@@ -60,15 +61,7 @@ import { brand } from '../data/site';
       <span class="visually-hidden">— {brand.tagline}</span>
     </h1>
 
-    <p class="tagline" data-type="tagline" data-uppercase>
-      <span class="tagline-run">{brand.tagline}</span>
-      {/* Narrow viewports use the measured three-line descriptor from the nav
-          plate (cap 7px, line pitch 15–16px, leading 2.2x) rather than letting
-          a 44-character sentence wrap raggedly. Both are in the reference. */}
-      <span class="tagline-stack" aria-hidden="true">
-        {brand.descriptor.map((line) => <span>{line}</span>)}
-      </span>
-    </p>
+    <Tagline class="cover-tagline" />
 
     <p class="cities" data-uppercase>
       {brand.cities.map((city, i) => (
@@ -135,18 +128,7 @@ import { brand } from '../data/site';
   .title { grid-row: 4; margin: 0; align-self: center; line-height: 1; }
   .title :global(.wordmark) { font-size: var(--type-display); }
 
-  .tagline {
-    grid-row: 5;
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: var(--type-tagline);
-    letter-spacing: var(--track-tagline);
-    color: var(--silver-hi);
-    text-transform: uppercase;
-    white-space: nowrap;
-    line-height: 1;
-  }
-  .tagline-stack { display: none; }
+  .stack :global(.cover-tagline) { grid-row: 5; }
 
   .cities {
     grid-row: 7;
@@ -183,19 +165,18 @@ import { brand } from '../data/site';
       padding-inline: var(--space-band);
     }
     .title :global(.wordmark) { font-size: clamp(2.6rem, 15vw, 5rem); }
-    .tagline { white-space: normal; }
-    .tagline-run {
-      position: absolute; inline-size: 1px; block-size: 1px;
-      overflow: hidden; clip-path: inset(50%); white-space: nowrap;
-    }
-    .tagline-stack {
-      display: grid;
-      gap: 0.55em;
-      letter-spacing: 0.14em;
-      line-height: var(--leading-descriptor);
-    }
     .cities { gap: 0.55em; letter-spacing: 0.16em; }
-    /* Weaver and wall rug live in the right third; hold them in frame. */
-    .scene :global(img) { object-position: 62% 50%; }
+    /* Invariant 7 measured the type's backing at 81 on a 70 ceiling here:
+       on a portrait viewport a full-bleed window puts the brightest part of
+       the scene directly under the wordmark. Same error as the hero, same
+       fix — the window is the KEY LIGHT occupying a band, not the ground.
+       Confining it to the upper band returns the type to the page ground,
+       which is what the reference's dark regions effectively are. */
+    .scene {
+      inset-block-end: auto;
+      block-size: 46%;
+      mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+    }
+    .scene :global(img) { object-position: 60% 42%; }
   }
 </style>

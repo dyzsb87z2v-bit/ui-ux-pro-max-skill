@@ -1,0 +1,229 @@
+---
+import Base from '../layouts/Base.astro';
+import SalonHeader from '../components/hero/SalonHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import AtelierScene from '../components/AtelierScene.astro';
+import GhostButton from '../components/primitives/GhostButton.astro';
+import Divider from '../components/primitives/Divider.astro';
+---
+<Base title="Bespoke — MiLAEDiA" description="Commission a rug woven to your room, palette and dimensions.">
+  <SalonHeader />
+  <main id="main" class="frame">
+    <header class="hd">
+      <div class="hdtext">
+        <p class="eyebrow" data-uppercase>The Atelier</p>
+        <h1>Bespoke</h1>
+        <p class="lede">
+          A commission begins with a conversation, not a form. Tell us as much
+          or as little as you know — dimensions and room are enough to start.
+          Everything else can be decided at the loom.
+        </p>
+        <Divider class="hd-divider" />
+      </div>
+      <div class="hdscene"><AtelierScene variant="hero" class="custom-atelier" /></div>
+    </header>
+
+    <form class="steps" data-custom novalidate>
+      <!-- Progressive disclosure: one movement at a time, all reachable. -->
+      <section class="step" data-step="1" aria-labelledby="s1">
+        <p class="num" aria-hidden="true">01</p>
+        <h2 id="s1">The piece</h2>
+        <div class="grid2">
+          <label><span>Width (cm)</span><input name="width" inputmode="numeric" required></label>
+          <label><span>Length (cm)</span><input name="length" inputmode="numeric" required></label>
+        </div>
+        <label><span>Room or application</span>
+          <select name="room">
+            <option>Living room</option><option>Dining room</option><option>Bedroom</option>
+            <option>Hallway or stair</option><option>Wall hanging</option>
+            <option>Commercial or hospitality</option><option>Other</option>
+          </select>
+        </label>
+        <label><span>Quantity</span><input name="quantity" type="number" min="1" value="1"></label>
+        <button type="button" class="next" data-next>Continue</button>
+      </section>
+
+      <section class="step" data-step="2" aria-labelledby="s2" hidden>
+        <p class="num" aria-hidden="true">02</p>
+        <h2 id="s2">The character</h2>
+        <label><span>Rug type</span>
+          <select name="type">
+            <option>Hand-knotted wool</option><option>Hand-knotted silk</option>
+            <option>Wool with silk highlights</option><option>Pictorial tapestry</option>
+            <option>Undecided — advise me</option>
+          </select>
+        </label>
+        <label><span>Style direction</span>
+          <select name="style">
+            <option>Classical medallion</option><option>Garden or panel</option>
+            <option>Geometric or tribal</option><option>Pictorial</option>
+            <option>Contemporary or plain-field</option><option>Undecided — advise me</option>
+          </select>
+        </label>
+        <fieldset class="swatches">
+          <legend><span>Palette</span></legend>
+          {[
+            ['Madder red', '#7B311D'], ['Indigo', '#243A5E'], ['Ivory', '#D9CDB4'],
+            ['Kork wool', '#8D5E37'], ['Gold', '#B99763'], ['Charcoal', '#2A2724'],
+          ].map(([label, hex]) => (
+            <label class="sw">
+              <input type="checkbox" name="palette" value={label}>
+              <span class="chip" style={`--c:${hex}`} aria-hidden="true"></span>
+              <span class="swl">{label}</span>
+            </label>
+          ))}
+        </fieldset>
+        <div class="nav2"><button type="button" data-back>Back</button><button type="button" class="next" data-next>Continue</button></div>
+      </section>
+
+      <section class="step" data-step="3" aria-labelledby="s3" hidden>
+        <p class="num" aria-hidden="true">03</p>
+        <h2 id="s3">References &amp; timing</h2>
+        <label><span>Reference images (optional)</span>
+          <input name="refs" type="file" accept="image/*" multiple>
+        </label>
+        <p class="hint">Room photographs, a drawing, a piece you admire. Nothing is uploaded until you send the enquiry.</p>
+        <label><span>Timeline</span>
+          <select name="timeline">
+            <option>No fixed date</option><option>Within 6 months</option>
+            <option>Within 12 months</option><option>For a specific date</option>
+          </select>
+        </label>
+        <label><span>Anything else</span><textarea name="notes" rows="4"></textarea></label>
+        <div class="nav2"><button type="button" data-back>Back</button><button type="button" class="next" data-next>Continue</button></div>
+      </section>
+
+      <section class="step" data-step="4" aria-labelledby="s4" hidden>
+        <p class="num" aria-hidden="true">04</p>
+        <h2 id="s4">You</h2>
+        <div class="grid2">
+          <label><span>Name</span><input name="name" autocomplete="name" required></label>
+          <label><span>Email</span><input name="email" type="email" autocomplete="email" required></label>
+        </div>
+        <label><span>City</span><input name="city" autocomplete="address-level2"></label>
+        <div class="nav2">
+          <button type="button" data-back>Back</button>
+          <GhostButton type="submit">Send enquiry</GhostButton>
+        </div>
+        <p class="note" data-custom-note hidden></p>
+      </section>
+    </form>
+
+    <p class="progress" data-progress aria-live="polite">Step 1 of 4</p>
+  </main>
+  <SiteFooter />
+</Base>
+
+<style>
+  .hd { display:grid; grid-template-columns: minmax(0,1fr) minmax(0,.9fr); gap: clamp(1.5rem,5vw,4rem);
+    align-items:center; padding-block: clamp(2.5rem, 7vh, 5rem) clamp(2rem,5vh,3.5rem); }
+  .hdtext { display:grid; gap:1.1rem; justify-items:start; }
+  .eyebrow { margin:0; font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-cities); text-transform:uppercase; color: var(--bronze); }
+  h1 { margin:0; font-family: var(--font-display); font-weight:300;
+    font-size: clamp(2.6rem,7vw,5.4rem); line-height:1; color:#EDE7DA; }
+  .lede { margin:0; font-family: var(--font-display); font-size: clamp(1rem,1.5vw,1.2rem);
+    line-height:1.9; color: var(--silver); max-inline-size:46ch; }
+  .hdscene { aspect-ratio: 4/3; }
+  .hdscene :global(.custom-atelier) { position:relative; inline-size:100%; block-size:100%; }
+
+  .steps { max-inline-size: 62ch; padding-block: clamp(1rem,3vh,2rem); }
+  .step { display:grid; gap:1.1rem; }
+  .num { margin:0; font-family: var(--font-display); font-size:2.2rem; color: var(--gold); opacity:.5; line-height:1; }
+  .step h2 { margin:0 0 .4rem; font-family: var(--font-display); font-weight:300;
+    font-size: clamp(1.5rem,3vw,2.2rem); color:#EDE7DA; }
+  label { display:grid; gap:.45em; }
+  label > span { font-family: var(--font-display); font-size: var(--type-card-link); color: var(--silver); }
+  input, select, textarea {
+    background: var(--panel); color: var(--silver-hi); border:1px solid var(--hairline);
+    border-radius:5px; padding:.75em .9em; font-family: var(--font-display); font-size:1rem; inline-size:100%;
+  }
+  input:focus-visible, select:focus-visible, textarea:focus-visible { border-color: var(--gold); }
+  input[aria-invalid='true'] { border-color: var(--crimson); }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  .hint { margin:-.4rem 0 0; font-family: var(--font-display); font-size: var(--type-descriptor);
+    color: var(--silver); opacity:.55; }
+
+  .swatches { border:0; margin:0; padding:0; display:grid; gap:.7em; }
+  .swatches legend { padding:0 0 .3rem; }
+  .swatches legend span { font-family: var(--font-display); font-size: var(--type-card-link); color: var(--silver); }
+  .sw { display:flex; align-items:center; gap:.7em; cursor:pointer; }
+  .sw input { inline-size:auto; }
+  .chip { inline-size:1.5em; block-size:1.5em; border-radius:3px; background: var(--c);
+    border:1px solid var(--hairline); }
+  .swl { font-family: var(--font-display); font-size: var(--type-card-link); color: var(--silver-hi); }
+
+  .next, [data-back] {
+    justify-self:start; background:none; border:1px solid var(--hairline); border-radius:5px;
+    color: var(--gold); font-family: var(--font-display); font-size: var(--type-card-link);
+    letter-spacing: var(--track-nav); text-transform:uppercase; padding:.75em 1.5em; cursor:pointer;
+  }
+  [data-back] { color: var(--silver); }
+  .next:hover, [data-back]:hover { color: var(--gold-hi); border-color: var(--gold); }
+  .nav2 { display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
+
+  .note { margin:0; font-family: var(--font-display); font-size: var(--type-card-link); color: var(--gold); line-height:1.7; }
+  .note[data-kind='error'] { color:#C98A6A; }
+  .progress { font-family: var(--font-display); font-size: var(--type-descriptor);
+    letter-spacing: var(--track-nav); text-transform:uppercase; color: var(--bronze);
+    padding-block-end: clamp(3rem,8vh,6rem); }
+
+  @media (max-width: 900px) { .hd { grid-template-columns:1fr; } .hdscene { aspect-ratio: 3/2; } }
+  @media (max-width: 640px) { .grid2 { grid-template-columns:1fr; } }
+</style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-custom]')!;
+  const steps = Array.from(form.querySelectorAll<HTMLElement>('.step'));
+  const progress = document.querySelector<HTMLElement>('[data-progress]')!;
+  const note = document.querySelector<HTMLElement>('[data-custom-note]')!;
+  let i = 0;
+
+  const show = () => {
+    steps.forEach((s, n) => { s.hidden = n !== i; });
+    progress.textContent = `Step ${i + 1} of ${steps.length}`;
+    steps[i].querySelector<HTMLElement>('h2')?.focus?.();
+  };
+
+  const valid = (step: HTMLElement) => {
+    let ok = true, first: HTMLElement | null = null;
+    step.querySelectorAll<HTMLInputElement>('[required]').forEach((el) => {
+      const bad = !el.value.trim() || (el.type === 'email' && !/.+@.+\..+/.test(el.value));
+      el.setAttribute('aria-invalid', String(bad));
+      if (bad) { ok = false; if (!first) first = el; }
+    });
+    if (first) (first as HTMLElement).focus();
+    return ok;
+  };
+
+  form.querySelectorAll('[data-next]').forEach((b) => b.addEventListener('click', () => {
+    if (!valid(steps[i])) return;
+    i = Math.min(steps.length - 1, i + 1); show();
+  }));
+  form.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => {
+    i = Math.max(0, i - 1); show();
+  }));
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!valid(steps[i])) return;
+    const fd = new FormData(form);
+    const payload = Object.fromEntries(fd.entries());
+    // No enquiry endpoint is configured on this deployment. The submission is
+    // recorded locally and the integration point is documented in
+    // PLACEHOLDERS.md — nothing is silently discarded and nothing is faked.
+    try { localStorage.setItem('milaedia:last-enquiry', JSON.stringify(payload)); } catch {}
+    note.dataset.kind = 'ok';
+    note.textContent =
+      'Your enquiry has been prepared. An enquiry endpoint is not yet connected on this deployment, so it has not been transmitted — see PLACEHOLDERS.md for the integration point.';
+    note.hidden = false;
+  });
+
+  // Deep link from a product page: /custom?ref=slug
+  const ref = new URLSearchParams(location.search).get('ref');
+  if (ref) {
+    const notes = form.querySelector<HTMLTextAreaElement>('[name="notes"]');
+    if (notes) notes.value = `Enquiry regarding: ${ref}\n`;
+  }
+  show();
+</script>

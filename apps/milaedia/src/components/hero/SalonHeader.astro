@@ -1,0 +1,353 @@
+---
+/**
+ * SalonHeader — the header from the new reference.
+ *
+ * MEASURED from the reference (1536x1024):
+ *   band height        94px  = 9.18% of frame; hard bottom edge at y=94,
+ *                      a SOLID ground, not a transparent overlay
+ *   band ground        #0E0C0C  (matches --raised #120F0A, distance 5.4)
+ *   wordmark left      x 30..221
+ *   nav idle           #EFEFEF   near-white — brighter than the old --silver
+ *   nav active         #DED0B3 with a 44px underline at y=61
+ *   utility cluster    phone -> DE|EN -> EUR, right-aligned
+ *
+ * DERIVED, and flagged as such: the reference shows a chevron on COLLECTIONS
+ * but not what the menu contains. It is wired to the five real collections
+ * rather than inventing entries.
+ */
+import Wordmark from '../primitives/Wordmark.astro';
+import Icon from '../primitives/Icon.astro';
+import NavPlate from '../NavPlate.astro';
+import { collections } from '../../data/site';
+
+interface Props {
+  current?: string;
+  /** VERIFIED business detail, supplied with the reference. */
+  phone?: string;
+  phoneHref?: string;
+}
+const {
+  current = '/',
+  phone = '+49 163 6207202',
+  phoneHref = 'tel:+491636207202',
+} = Astro.props;
+
+const links = [
+  { href: '/home', label: 'Home' },
+  { href: '/collections', label: 'Collections', menu: true },
+  { href: '/about', label: 'About us' },
+  { href: '/gallery', label: 'Gallery' },
+  { href: '/custom', label: 'Private consultation' },
+  { href: '/contact', label: 'Contact' },
+];
+---
+<header class="band" data-salon-header>
+  <a class="brand" href="/home" aria-label="MiLAEDiA — home">
+    <Wordmark as="span" class="brand-word" bloom={false} />
+  </a>
+
+  <nav class="nav" aria-label="Primary">
+    <ul>
+      {links.map((l) => (
+        <li class={l.menu ? 'has-menu' : undefined}>
+          <a
+            href={l.href}
+            data-uppercase
+            aria-current={l.href === current ? 'page' : undefined}
+          >
+            {l.label}
+            {l.menu && (
+              <svg class="chev" viewBox="0 0 12 8" aria-hidden="true" focusable="false">
+                <path d="M1 1.5 6 6.5l5-5" fill="none" stroke="currentColor"
+                      stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            )}
+          </a>
+          {l.menu && (
+            <ul class="menu">
+              {collections.map((c) => (
+                <li><a href={`/collections/${c.slug}`}>{c.title}</a></li>
+              ))}
+            </ul>
+          )}
+        </li>
+      ))}
+    </ul>
+  </nav>
+
+  <div class="utility">
+    <a class="phone" href={phoneHref}>
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="phone-mark">
+        <circle cx="12" cy="12" r="10.2" fill="none" stroke="currentColor" stroke-width="1.2" />
+        <path d="M8.4 8.1c-.5.5-.7 1.3-.4 2 .5 1.3 1.4 2.6 2.5 3.7 1.1 1.1 2.4 2 3.7 2.5.7.3 1.5.1 2-.4l.6-.6a.9.9 0 0 0 0-1.3l-1.3-1.3a.9.9 0 0 0-1.3 0l-.5.5a8.6 8.6 0 0 1-2.6-2.6l.5-.5a.9.9 0 0 0 0-1.3L10.3 7.5a.9.9 0 0 0-1.3 0z"
+              fill="currentColor" />
+      </svg>
+      <span>{phone}</span>
+    </a>
+
+    <span class="sep" aria-hidden="true"></span>
+
+    {/* Locale switcher. Only English is built today; German is the reserved
+        second locale (spec 09b) and is marked so, never faked as live. */}
+    <div class="locale" role="group" aria-label="Language">
+      <a href="/home" aria-disabled="true" class="off" title="German is not published yet">DE</a>
+      <span class="bar" aria-hidden="true">|</span>
+      <a href="/home" aria-current="true" class="on">EN</a>
+    </div>
+
+    <span class="sep" aria-hidden="true"></span>
+
+    {/* Single currency today. The control is present because the reference
+        shows it, and reads as settled rather than pretending to switch. */}
+    <span class="currency">EUR&nbsp;€</span>
+
+    <a class="bag" href="/bag" aria-label="Bag">
+      <Icon name="bag" />
+      <span class="count" data-bag-count hidden></span>
+    </a>
+
+    <button
+      class="burger" type="button" aria-label="Open menu"
+      aria-expanded="false" aria-controls="salon-menu" data-menu-open
+    >
+      <Icon name="menu" />
+    </button>
+  </div>
+</header>
+
+<div class="overlay" id="salon-menu" hidden data-nav-overlay>
+  <button class="overlay-close" type="button" aria-label="Close menu" data-menu-close>
+    <Icon name="close" size="1.35em" />
+  </button>
+  <NavPlate current={current} class="overlay-plate" />
+  <a class="overlay-phone" href={phoneHref}>{phone}</a>
+</div>
+
+<style>
+  /* Measured: 94px at a 1024-tall frame, a solid ground with a hard bottom
+     edge — not a transparent bar floating over the photograph. */
+  .band {
+    --band-h: clamp(58px, 6.12vw, 94px);
+    position: relative;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: clamp(0.8rem, 2vw, 2.4rem);
+    block-size: var(--band-h);
+    padding-inline: clamp(20px, 3.91vw, 60px) clamp(16px, 2.8vw, 44px);
+    background: #0E0C0C;
+  }
+
+  /* An anchor with no colour inherits the UA default blue -- invariant 6
+     caught it on every page. */
+  .brand { text-decoration: none; flex: 0 0 auto; color: var(--gold-hi); }
+  .brand :global(.brand-word) {
+    font-size: clamp(1.15rem, 1.85vw, 1.78rem);
+    letter-spacing: 0.03em;
+  }
+
+  .nav { margin-inline: auto; }
+  .nav ul {
+    display: flex; align-items: center;
+    gap: clamp(0.7rem, 1.75vw, 1.9rem);
+    list-style: none; margin: 0; padding: 0;
+  }
+  .nav li { position: relative; }
+  .nav > ul > li > a {
+    display: inline-flex; align-items: center; gap: 0.42em;
+    padding-block: 0.7em;
+    font-family: var(--font-display);
+    font-size: clamp(0.66rem, 0.91vw, 0.88rem);
+    letter-spacing: var(--track-nav);
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    color: #EFEFEF;                       /* measured nav idle */
+    transition: color 240ms var(--ease-cinematic);
+  }
+  .nav > ul > li > a:hover,
+  .nav > ul > li > a:focus-visible { color: var(--gold-hi); }
+
+  /* measured: active is warmer and carries a 44px rule beneath it */
+  .nav > ul > li > a[aria-current='page'] { color: #DED0B3; }
+  .nav > ul > li > a[aria-current='page']::after {
+    content: '';
+    position: absolute; inset-inline-start: 0; inset-block-end: 0.25em;
+    inline-size: 44px; block-size: 1px;
+    background: var(--gold);
+  }
+  .chev { inline-size: 0.62em; block-size: auto; opacity: 0.8; }
+
+  /* ---- collections menu ---- */
+  .menu {
+    position: absolute; inset-block-start: 100%; inset-inline-start: -1rem;
+    z-index: 5;
+    display: grid; gap: 0.15rem;
+    min-inline-size: 16rem;
+    margin: 0; padding: 0.7rem 0.4rem;
+    list-style: none;
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-card);
+    opacity: 0; visibility: hidden; translate: 0 -6px;
+    transition: opacity 220ms var(--ease-cinematic),
+                translate 220ms var(--ease-cinematic),
+                visibility 220ms;
+  }
+  .has-menu:hover .menu,
+  .has-menu:focus-within .menu { opacity: 1; visibility: visible; translate: 0 0; }
+  .menu a {
+    display: block; padding: 0.5em 0.9em;
+    font-family: var(--font-display);
+    font-size: var(--type-card-link);
+    letter-spacing: var(--track-card);
+    text-decoration: none;
+    color: var(--silver);
+    border-radius: 4px;
+  }
+  .menu a:hover, .menu a:focus-visible { color: var(--gold-hi); background: var(--raised); }
+
+  /* ---- utility cluster ---- */
+  .utility {
+    display: flex; align-items: center;
+    gap: clamp(0.55rem, 1.1vw, 1.1rem);
+    flex: 0 0 auto;
+    font-family: var(--font-display);
+    font-size: clamp(0.66rem, 0.9vw, 0.88rem);
+  }
+  .phone {
+    display: inline-flex; align-items: center; gap: 0.55em;
+    color: #EAEAEA; text-decoration: none; white-space: nowrap;
+    transition: color 240ms var(--ease-cinematic);
+  }
+  .phone:hover, .phone:focus-visible { color: var(--gold-hi); }
+  .phone-mark { inline-size: 1.35em; block-size: auto; flex: 0 0 auto; }
+
+  .sep { inline-size: 1px; block-size: 1.5em; background: var(--hairline); }
+
+  .locale { display: inline-flex; align-items: center; gap: 0.45em; }
+  .locale a { text-decoration: none; letter-spacing: 0.08em; }
+  .locale .on  { color: #F0F0F0; }
+  .locale .off { color: var(--silver); opacity: 0.55; cursor: not-allowed; }
+  .locale .bar { color: var(--hairline); }
+
+  .currency { color: #DEDEDB; letter-spacing: 0.06em; white-space: nowrap; }
+
+  .bag {
+    position: relative; display: inline-flex; align-items: center;
+    color: var(--gold); text-decoration: none; padding: 0.25em;
+  }
+  .bag:hover, .bag:focus-visible { color: var(--gold-hi); }
+  .count {
+    position: absolute; inset-block-start: -0.1em; inset-inline-end: -0.35em;
+    min-inline-size: 1.35em; padding: 0 0.3em;
+    border: 1px solid var(--gold); border-radius: 999px;
+    background: var(--ground); color: var(--gold-hi);
+    font-size: 0.62em; line-height: 1.5; text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .burger {
+    display: none;
+    background: none; border: 0; padding: 0.35em;
+    color: #EFEFEF; cursor: pointer;
+  }
+
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--gold-hi); outline-offset: 3px; border-radius: 3px;
+  }
+
+  /* ---- tablet: the utility cluster sheds first, the nav survives ---- */
+  @media (max-width: 1180px) {
+    .phone span { display: none; }
+    .currency { display: none; }
+  }
+  @media (max-width: 980px) {
+    .nav { display: none; }
+    .locale { display: none; }
+    .sep { display: none; }
+    .burger { display: inline-flex; }
+    .utility { margin-inline-start: auto; }
+    .phone span { display: inline; }
+  }
+  @media (max-width: 560px) { .phone span { display: none; } }
+
+  /* ---- overlay ---- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 60;
+    background: var(--ground);
+    overflow-y: auto;
+    display: grid; align-content: center; justify-items: center;
+    gap: 2rem;
+    padding-block: 12vh 8vh;
+    animation: overlay-in 320ms var(--ease-cinematic) both;
+  }
+  .overlay[hidden] { display: none; }
+  @keyframes overlay-in { from { opacity: 0 } to { opacity: 1 } }
+  .overlay-close {
+    position: absolute; inset-block-start: clamp(12px, 3vh, 28px);
+    inset-inline-end: clamp(16px, 4vw, 40px);
+    background: none; border: 0; padding: 0.4em;
+    color: var(--gold-hi); cursor: pointer;
+  }
+  .overlay :global(.overlay-plate) { inline-size: min(420px, 86vw); }
+  .overlay-phone {
+    font-family: var(--font-display);
+    font-size: 1.05rem; letter-spacing: 0.06em;
+    color: var(--gold); text-decoration: none;
+    border-block-end: 1px solid var(--hairline); padding-block-end: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .menu, .nav a, .phone, .cta { transition: none; }
+    .overlay { animation: none; }
+  }
+</style>
+
+<script>
+  import { bagCount, onBagChange } from '../../lib/bag';
+
+  const badge = document.querySelector<HTMLElement>('[data-bag-count]');
+  const paint = () => {
+    if (!badge) return;
+    const n = bagCount();
+    badge.textContent = String(n);
+    badge.hidden = n === 0;
+  };
+  paint();
+  onBagChange(paint);
+
+  const trigger = document.querySelector<HTMLButtonElement>('[data-menu-open]');
+  const closer = document.querySelector<HTMLButtonElement>('[data-menu-close]');
+  const overlay = document.querySelector<HTMLElement>('[data-nav-overlay]');
+
+  if (trigger && closer && overlay) {
+    let last: HTMLElement | null = null;
+    const open = () => {
+      last = document.activeElement as HTMLElement;
+      overlay.hidden = false;
+      trigger.setAttribute('aria-expanded', 'true');
+      document.documentElement.style.overflow = 'hidden';
+      closer.focus();
+    };
+    const close = () => {
+      overlay.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+      document.documentElement.style.overflow = '';
+      (last ?? trigger).focus();
+    };
+    trigger.addEventListener('click', open);
+    closer.addEventListener('click', close);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !overlay.hidden) close();
+    });
+    overlay.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const f = overlay.querySelectorAll<HTMLElement>('a[href], button:not([disabled])');
+      if (!f.length) return;
+      const first = f[0], lastEl = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); lastEl.focus(); }
+      else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); first.focus(); }
+    });
+  }
+</script>

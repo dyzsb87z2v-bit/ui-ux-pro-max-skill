@@ -1,0 +1,164 @@
+---
+/**
+ * MainHero — the post-entry hero (decision #5).
+ *
+ * "Use the verified Hero composition from the supplied references. Preserve
+ *  the low-key luxury lighting, layered depth, Persian rug focus and weaving
+ *  woman as a secondary environmental element."
+ *
+ * Composition, from the measured three-zone structure (spec §10):
+ *   left   6–34%   European interior
+ *   centre 27–69%  type void
+ *   right  64–100% Persian craft — rug primary, weaver SECONDARY
+ *
+ * Focal ranking is measured and must hold (Forensics §09, peak luminance):
+ *   window/lamp (light sources) > weaver 147.8 > wall rug 137.0 > armchair
+ *   109.7. The weaver outranks the rug in raw luminance but is subordinate
+ *   in the composition — she occupies the lower right, below and beside the
+ *   rug, never centred and never the subject.
+ *
+ * Layers are separated here so Phase 6 can drive them independently. The
+ * measured depth stack (five layers) is what makes parallax possible at all.
+ *
+ * INTERIM: no clean hero plate exists (PLACEHOLDERS.md). Layers use verified
+ * TEXT-FREE assets. Swapping in the real plate is an import change.
+ */
+import { Picture } from 'astro:assets';
+import far from '../assets/scene/window-triptych.png';   // L1+L2 Berlin + glass
+import AtelierScene from './AtelierScene.astro';
+import Wordmark from './primitives/Wordmark.astro';
+import Divider from './primitives/Divider.astro';
+import GhostButton from './primitives/GhostButton.astro';
+import Tagline from './primitives/Tagline.astro';
+import { brand } from '../data/site';
+---
+<section class="hero panel scene-locked" aria-labelledby="hero-title" data-hero>
+  <!-- Depth stack. data-depth drives Phase 6 parallax; the values are the
+       measured layer order, near = 1. -->
+  <div class="layers" aria-hidden="true" data-depth-stage>
+    <div class="layer layer-far" data-depth="1" data-placeholder-asset="hero-plate">
+      <Picture src={far} alt="" widths={[480, 960]} sizes="100vw"
+               formats={['avif']} fallbackFormat="webp" quality={60}
+               loading="eager" fetchpriority="high" />
+    </div>
+  </div>
+
+  <!-- The craft zone (measured x 64–100%) is the 3D atelier: rug primary,
+       weaver present as the maker. It occupies a dedicated area of the
+       composition rather than taking over the page. -->
+  <AtelierScene variant="hero" class="hero-atelier" />
+
+  <div class="content scene-text">
+    <h1 id="hero-title" class="title"><Wordmark as="span" role="display" /></h1>
+    <Tagline />
+    <Divider class="hero-divider" />
+    <p class="cities" data-uppercase>
+      {brand.cities.map((city, i) => (
+        <>
+          {i > 0 && <span class="sep" aria-hidden="true">&#9670;</span>}
+          <span>{city}</span>
+        </>
+      ))}
+    </p>
+    <div class="cta"><GhostButton href="/collections">View the Collections</GhostButton></div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    aspect-ratio: 2 / 1;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .layers { position: absolute; inset: 0; z-index: 0; }
+  .layer { position: absolute; will-change: transform; --dx: 0px; --dy: 0px;
+    transform: translate3d(var(--dx), var(--dy), 0); }
+
+  /* L1+L2 — the window. Measured: it occupies x 6–34%, y 7–65% of the frame,
+     NOT the full bleed. It is the key light, not the ground. Making it
+     full-bleed inverts the measured light model and pushes the whole page
+     out of the low-key band (invariant 1 caught exactly that: 25.3% in the
+     darkest decile against a 40% floor). The unlit remainder is the page
+     ground, which is what the reference's dark regions effectively are. */
+  .layer-far {
+    inset-block: 0 18%;
+    inset-inline-start: 0;
+    inline-size: 46%;
+    mask-image: linear-gradient(to right, #000 74%, transparent 100%),
+                linear-gradient(to top, #000 78%, transparent 100%);
+    mask-composite: intersect;
+    -webkit-mask-composite: source-in;
+  }
+  .layer-far :global(img) { inline-size: 100%; block-size: 100%; object-fit: cover; }
+
+
+
+  .content {
+    /* absolute + inset so it centres against the section's real box.
+       `block-size: 100%` does not resolve against a min-block-size parent —
+       that is why this cluster sat at the top on mobile. */
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    text-align: center;
+    gap: 1.1em;
+    /* Type sits in the centre void, biased left of the craft zone. */
+    padding-inline: var(--space-class);
+    padding-inline-end: 34%;
+  }
+  .title { margin: 0; line-height: 1; }
+  .title :global(.wordmark) { font-size: clamp(2rem, 6.2vw, 7rem); }
+
+  .content :global(.hero-divider) { inline-size: min(340px, 60%); }
+
+  .cities {
+    margin: 0;
+    display: flex; align-items: center; gap: 0.85em;
+    font-family: var(--font-display);
+    font-size: var(--type-cities);
+    letter-spacing: var(--track-cities);
+    color: var(--silver-hi);
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .cities .sep { color: var(--gold); font-size: 0.62em; letter-spacing: 0; }
+
+  /* Craft zone — measured x 64–100% of the hero. */
+  .hero :global(.hero-atelier) {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    inline-size: 38%;
+    z-index: 0;
+  }
+
+  @media (max-width: 900px) {
+    .content { padding-inline-end: var(--space-class); }
+    .layer-far { inline-size: 58%; }
+    .hero :global(.hero-atelier) { inline-size: 46%; }
+  }
+
+  @media (max-width: 640px) {
+    .hero { aspect-ratio: auto; min-block-size: calc(100svh - 2 * var(--page-margin)); }
+    .content {
+      /* clear the header band, and leave the lower third to the craft zone */
+      padding-block: clamp(56px, 11vh, 96px) 42%;
+      align-content: center;
+      gap: 1.4em;
+    }
+    .title :global(.wordmark) { font-size: clamp(2.2rem, 12vw, 4rem); }
+    /* Rug stays the primary object; weaver stays secondary beneath it. */
+    /* Stacked, not overlaid: window occupies the upper band, the type block
+       the middle, and the craft zone the lower third. The rug previously ran
+       under the cities line and the CTA. */
+    .layer-far { inline-size: 100%; inset-block: 0 52%; }
+    .hero :global(.hero-atelier) {
+      inline-size: 100%; inset-block: 54% 0; inset-inline-end: 0;
+    }
+  }
+</style>

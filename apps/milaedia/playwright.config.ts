@@ -7,9 +7,13 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:4321',
     trace: 'off',
-    // Chromium is pre-installed in this environment; pin to it rather than
-    // downloading a matching build for the installed @playwright/test.
-    launchOptions: { executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' },
+    // Normally let Playwright use the browser it installed itself
+    // (`npx playwright install chromium`). Set CHROMIUM_PATH to point at an
+    // existing build instead -- CI images often ship one, and downloading a
+    // second copy just to match the installed @playwright/test is wasteful.
+    ...(process.env.CHROMIUM_PATH
+      ? { launchOptions: { executablePath: process.env.CHROMIUM_PATH } }
+      : {}),
   },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
